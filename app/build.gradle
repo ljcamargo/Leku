@@ -14,7 +14,7 @@ android {
   compileSdkVersion 29
 
   defaultConfig {
-    applicationId "com.schibsted.mappicker"
+    applicationId "mx.ioio.hwsmappicker"
     minSdkVersion 19
     //noinspection OldTargetApi
     targetSdkVersion 29
@@ -65,6 +65,7 @@ dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])
   implementation 'androidx.multidex:multidex:2.0.1'
   implementation 'androidx.appcompat:appcompat:1.1.0'
+  implementation 'com.huawei.agconnect:agconnect-core:1.0.0.300'
   implementation 'com.huawei.hms:maps:4.0.1.300'
   implementation 'com.google.android.material:material:1.0.0-rc01'
   implementation project(':leku')

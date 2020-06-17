@@ -35,3 +35,4 @@ atlassian-ide-plugin.xml
 .gradle/*
 
 projectFilesBackup/.idea/*.xml
+app/agconnect-services.json
