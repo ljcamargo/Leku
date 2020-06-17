@@ -1,31 +1,39 @@
 package com.schibstedspain.leku.geocoder.places
 
 import android.location.Address
-import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.LatLng
+import com.huawei.hms.maps.model.LatLngBounds
 import com.google.android.gms.tasks.RuntimeExecutionException
-import com.google.android.gms.tasks.Tasks
+import com.huawei.hmf.tasks.Tasks
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.huawei.hmf.tasks.Task
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Observable.defer
 import java.util.Locale
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import com.google.android.gms.tasks.Tasks as GoogleTasks
+import com.google.android.gms.tasks.Task as GoogleTask
 
 private const val PREDICTIONS_WAITING_TIME: Long = 6
 private const val PLACE_BY_ID_WAITING_TIME: Long = 3
 
 class GooglePlacesDataSource(private val geoDataClient: PlacesClient) {
 
+    /*fun <T>resultConversion(task: GoogleTask<T>): Task<T> {
+
+    }*/
+
     fun getFromLocationName(query: String, latLngBounds: LatLngBounds): Observable<List<Address>> {
-        val locationBias = RectangularBounds.newInstance(
-            latLngBounds.southwest,
-            latLngBounds.northeast)
+        val southwest = LatLng(latLngBounds.southwest.latitude, latLngBounds.southwest.longitude)
+        val northeast = LatLng(latLngBounds.northeast.latitude, latLngBounds.northeast.longitude)
+        val locationBias = RectangularBounds.newInstance(southwest, northeast)
         return defer {
             val findAutocompletePredictionsRequest = FindAutocompletePredictionsRequest
                 .builder()
@@ -34,7 +42,7 @@ class GooglePlacesDataSource(private val geoDataClient: PlacesClient) {
                 .build()
             val results = geoDataClient.findAutocompletePredictions(findAutocompletePredictionsRequest)
             try {
-                Tasks.await(results, PREDICTIONS_WAITING_TIME, TimeUnit.SECONDS)
+                GoogleTasks.await(results, PREDICTIONS_WAITING_TIME, TimeUnit.SECONDS)
             } catch (ignored: ExecutionException) {
             } catch (ignored: InterruptedException) {
             } catch (ignored: TimeoutException) {
@@ -57,7 +65,7 @@ class GooglePlacesDataSource(private val geoDataClient: PlacesClient) {
                 val fetchPlaceRequest = FetchPlaceRequest.builder(prediction.placeId, placeFields).build()
                 val placeBufferResponseTask = geoDataClient.fetchPlace(fetchPlaceRequest)
                 try {
-                    Tasks.await(placeBufferResponseTask, PLACE_BY_ID_WAITING_TIME, TimeUnit.SECONDS)
+                    GoogleTasks.await(placeBufferResponseTask, PLACE_BY_ID_WAITING_TIME, TimeUnit.SECONDS)
                 } catch (ignored: ExecutionException) {
                 } catch (ignored: InterruptedException) {
                 } catch (ignored: TimeoutException) {

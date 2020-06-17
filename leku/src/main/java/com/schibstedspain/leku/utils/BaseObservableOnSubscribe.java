@@ -1,13 +1,12 @@
 package com.schibstedspain.leku.utils;
 
 import android.content.Context;
-import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.Api;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.huawei.hms.api.ConnectionResult;
+import com.huawei.hms.api.Api;
+import com.huawei.hms.api.HuaweiApiClient;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,9 +28,9 @@ public abstract class BaseObservableOnSubscribe<T> implements ObservableOnSubscr
 
     @Override
     public void subscribe(ObservableEmitter<T> emitter) throws Exception {
-        final GoogleApiClient apiClient = createApiClient(emitter);
+        final HuaweiApiClient apiClient = createApiClient(emitter);
         try {
-            apiClient.connect();
+            apiClient.connect(0);
         } catch (Throwable ex) {
             if (!emitter.isDisposed()) {
                 emitter.onError(ex);
@@ -47,9 +46,9 @@ public abstract class BaseObservableOnSubscribe<T> implements ObservableOnSubscr
         }));
     }
 
-    private GoogleApiClient createApiClient(ObservableEmitter<? super T> emitter) {
+    private HuaweiApiClient createApiClient(ObservableEmitter<? super T> emitter) {
         ApiClientConnectionCallbacks apiClientConnectionCallbacks = new ApiClientConnectionCallbacks(ctx, emitter);
-        GoogleApiClient.Builder apiClientBuilder = new GoogleApiClient.Builder(ctx);
+        HuaweiApiClient.Builder apiClientBuilder = new HuaweiApiClient.Builder(ctx);
 
         for (Api<? extends Api.ApiOptions.NotRequiredOptions> service : services) {
             apiClientBuilder = apiClientBuilder.addApi(service);
@@ -59,7 +58,7 @@ public abstract class BaseObservableOnSubscribe<T> implements ObservableOnSubscr
                 .addConnectionCallbacks(apiClientConnectionCallbacks)
                 .addOnConnectionFailedListener(apiClientConnectionCallbacks);
 
-        GoogleApiClient apiClient = apiClientBuilder.build();
+        HuaweiApiClient apiClient = apiClientBuilder.build();
         apiClientConnectionCallbacks.setClient(apiClient);
         return apiClient;
     }
@@ -67,17 +66,17 @@ public abstract class BaseObservableOnSubscribe<T> implements ObservableOnSubscr
     protected void onDisposed() {
     }
 
-    protected abstract void onGoogleApiClientReady(Context context, GoogleApiClient googleApiClient, ObservableEmitter<? super T> emitter);
+    protected abstract void onHuaweiApiClientReady(Context context, HuaweiApiClient googleApiClient, ObservableEmitter<? super T> emitter);
 
     private class ApiClientConnectionCallbacks implements
-            GoogleApiClient.ConnectionCallbacks,
-            GoogleApiClient.OnConnectionFailedListener {
+            HuaweiApiClient.ConnectionCallbacks,
+            HuaweiApiClient.OnConnectionFailedListener {
 
         final private Context context;
 
         final private ObservableEmitter<? super T> emitter;
 
-        private GoogleApiClient apiClient;
+        private HuaweiApiClient apiClient;
 
         private ApiClientConnectionCallbacks(Context context, ObservableEmitter<? super T> emitter) {
             this.context = context;
@@ -85,9 +84,9 @@ public abstract class BaseObservableOnSubscribe<T> implements ObservableOnSubscr
         }
 
         @Override
-        public void onConnected(Bundle bundle) {
+        public void onConnected() {
             try {
-                onGoogleApiClientReady(context, apiClient, emitter);
+                onHuaweiApiClientReady(context, apiClient, emitter);
             } catch (Throwable ex) {
                 if (!emitter.isDisposed()) {
                     emitter.onError(ex);
@@ -109,7 +108,7 @@ public abstract class BaseObservableOnSubscribe<T> implements ObservableOnSubscr
             }
         }
 
-        void setClient(GoogleApiClient client) {
+        void setClient(HuaweiApiClient client) {
             this.apiClient = client;
         }
     }

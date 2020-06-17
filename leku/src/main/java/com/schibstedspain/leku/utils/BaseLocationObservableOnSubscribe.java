@@ -2,20 +2,21 @@ package com.schibstedspain.leku.utils;
 
 import android.content.Context;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
+import com.huawei.hms.api.Api;
+import com.huawei.hms.api.HuaweiApiClient;
+import com.huawei.hms.location.FusedLocationProviderClient;
+import com.huawei.hms.location.LocationServices;
 
 import io.reactivex.rxjava3.core.ObservableEmitter;
 
 public abstract class BaseLocationObservableOnSubscribe<T> extends BaseObservableOnSubscribe<T> {
 
     protected BaseLocationObservableOnSubscribe(Context ctx) {
-        super(ctx, LocationServices.API);
+        super(ctx, null);
     }
 
     @Override
-    protected final void onGoogleApiClientReady(Context context, GoogleApiClient googleApiClient, ObservableEmitter<? super T> emitter) {
+    protected final void onHuaweiApiClientReady(Context context, HuaweiApiClient googleApiClient, ObservableEmitter<? super T> emitter) {
         onLocationProviderClientReady(LocationServices.getFusedLocationProviderClient(context), emitter);
     }
 

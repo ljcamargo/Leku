@@ -2,8 +2,8 @@ package com.schibstedspain.leku.geocoder
 
 import android.annotation.SuppressLint
 import android.location.Address
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
+import com.huawei.hms.maps.model.LatLng
+import com.huawei.hms.maps.model.LatLngBounds
 import com.schibstedspain.leku.geocoder.places.GooglePlacesDataSource
 import com.schibstedspain.leku.geocoder.timezone.GoogleTimeZoneDataSource
 import com.schibstedspain.leku.utils.ReactiveLocationProvider

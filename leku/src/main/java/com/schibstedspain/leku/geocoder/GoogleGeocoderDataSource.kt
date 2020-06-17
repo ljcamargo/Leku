@@ -1,7 +1,7 @@
 package com.schibstedspain.leku.geocoder
 
 import android.location.Address
-import com.google.android.gms.maps.model.LatLng
+import com.huawei.hms.maps.model.LatLng
 import com.schibstedspain.leku.geocoder.api.AddressBuilder
 import com.schibstedspain.leku.geocoder.api.NetworkClient
 import com.schibstedspain.leku.geocoder.api.NetworkException

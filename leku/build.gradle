@@ -13,11 +13,19 @@ group = 'com.schibstedspain.android'
 version = "${versionMajor}.${versionMinor}.${versionPatch}"
 
 android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    // For Kotlin projects
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
   compileSdkVersion 29
   resourcePrefix 'leku_'
 
   defaultConfig {
-    minSdkVersion 16
+    minSdkVersion 19
     //noinspection OldTargetApi
     targetSdkVersion 29
     versionName version
@@ -83,15 +91,9 @@ dependencies {
   implementation "androidx.appcompat:appcompat:1.1.0"
   implementation "com.google.android.material:material:1.2.0-alpha06"
 
-  def playServicesVersion = '17.0.0'
-  implementation ("com.google.android.gms:play-services-maps:$playServicesVersion") {
-	  exclude group: "com.android.support"
-  }
-  implementation ("com.google.android.gms:play-services-location:$playServicesVersion") {
-	  exclude group: "com.android.support"
-  }
-
-  implementation ("com.google.android.libraries.places:places:2.2.0") {
+  implementation ("com.huawei.hms:maps:4.0.1.300")
+  implementation ("com.huawei.hms:location:4.0.3.300")
+  implementation ("com.google.android.libraries.places:places:2.3.0") {
     exclude group: "com.android.support"
   }
 
@@ -259,3 +261,5 @@ def getVersionPatch() {
 
   return properties['PATCH'].toInteger()
 }
+
+apply plugin: 'com.huawei.agconnect'

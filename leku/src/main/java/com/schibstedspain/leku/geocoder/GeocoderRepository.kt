@@ -1,7 +1,7 @@
 package com.schibstedspain.leku.geocoder
 
 import android.location.Address
-import com.google.android.gms.maps.model.LatLng
+import com.huawei.hms.maps.model.LatLng
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
 

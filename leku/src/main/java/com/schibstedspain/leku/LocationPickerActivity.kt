@@ -39,24 +39,25 @@ import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.location.LocationListener
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL
-import com.google.android.gms.maps.GoogleMap.MAP_TYPE_SATELLITE
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.libraries.places.api.Places
+import com.huawei.hms.api.ConnectionResult
+import com.huawei.hms.api.HuaweiApiClient
+//import com.google.android.gms.location.LocationListener
+import com.huawei.hms.location.LocationCallback
+import com.huawei.hms.location.LocationServices
+import com.huawei.hms.maps.CameraUpdateFactory
+import com.huawei.hms.maps.HuaweiMap
+import com.huawei.hms.maps.HuaweiMap.MAP_TYPE_NORMAL
+import com.huawei.hms.maps.HuaweiMap.MAP_TYPE_SATELLITE
+import com.huawei.hms.maps.OnMapReadyCallback
+import com.huawei.hms.maps.SupportMapFragment
+import com.huawei.hms.maps.model.BitmapDescriptorFactory
+import com.huawei.hms.maps.model.CameraPosition
+import com.huawei.hms.maps.model.LatLng
+import com.huawei.hms.maps.model.MapStyleOptions
+import com.huawei.hms.maps.model.Marker
+import com.huawei.hms.maps.model.MarkerOptions
+//import com.google.android.libraries.places.api.Places
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.maps.GeoApiContext
 import com.schibstedspain.leku.geocoder.AndroidGeocoderDataSource
@@ -118,15 +119,15 @@ private const val DEBOUNCE_TIME = 400
 
 class LocationPickerActivity : AppCompatActivity(),
         OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,
-        GoogleMap.OnMapLongClickListener,
+        HuaweiApiClient.ConnectionCallbacks,
+        HuaweiApiClient.OnConnectionFailedListener,
+        LocationCallbackX,
+        HuaweiMap.OnMapLongClickListener,
         GeocoderViewInterface,
-        GoogleMap.OnMapClickListener {
+        HuaweiMap.OnMapClickListener {
 
-    private var map: GoogleMap? = null
-    private var googleApiClient: GoogleApiClient? = null
+    private var map: HuaweiMap? = null
+    private var huaweiApiClient: HuaweiApiClient? = null
     private var currentLocation: Location? = null
     private var currentLekuPoi: LekuPoi? = null
     private var geocoderPresenter: GeocoderPresenter? = null
@@ -259,7 +260,7 @@ class LocationPickerActivity : AppCompatActivity(),
         setUpSearchView()
         setUpMapIfNeeded()
         setUpFloatingButtons()
-        buildGoogleApiClient()
+        buildHuaweiApiClient()
         track(TrackEvents.ON_LOAD_LOCATION_PICKER)
     }
 
@@ -406,7 +407,7 @@ class LocationPickerActivity : AppCompatActivity(),
     }
 
     private fun switchToolbarVisibility() {
-        if (isPlayServicesAvailable()) {
+        if (isHuaweiServicesAvailable()) {
             toolbar.visibility = View.VISIBLE
         } else {
             toolbar.visibility = View.GONE
@@ -583,12 +584,12 @@ class LocationPickerActivity : AppCompatActivity(),
 
     override fun onStart() {
         super.onStart()
-        googleApiClient?.connect()
+        huaweiApiClient?.connect(this)
         geocoderPresenter?.setUI(this)
     }
 
     override fun onStop() {
-        googleApiClient?.let {
+        huaweiApiClient?.let {
             if (it.isConnected) {
                 it.disconnect()
             }
@@ -607,7 +608,7 @@ class LocationPickerActivity : AppCompatActivity(),
         textWatcher?.let {
             searchView?.removeTextChangedListener(it)
         }
-        googleApiClient?.unregisterConnectionCallbacks(this)
+        huaweiApiClient?.removeConnectionSuccessListener(this)
         super.onDestroy()
     }
 
@@ -621,7 +622,7 @@ class LocationPickerActivity : AppCompatActivity(),
         }
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
+    override fun onMapReady(googleMap: HuaweiMap) {
         if (map == null) {
             map = googleMap
             setMapStyle()
@@ -631,14 +632,14 @@ class LocationPickerActivity : AppCompatActivity(),
         }
     }
 
-    override fun onConnected(savedBundle: Bundle?) {
+    override fun onConnected() {
         if (currentLocation == null) {
             geocoderPresenter?.getLastKnownLocation()
         }
     }
 
     override fun onConnectionSuspended(i: Int) {
-        googleApiClient?.connect()
+        huaweiApiClient?.connect(this)
     }
 
     override fun onConnectionFailed(connectionResult: ConnectionResult) {
@@ -1015,7 +1016,7 @@ class LocationPickerActivity : AppCompatActivity(),
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,
                 getString(R.string.leku_voice_search_extra_language))
 
-        if (isPlayServicesAvailable()) {
+        if (isHuaweiServicesAvailable()) {
             try {
                 startActivityForResult(intent, REQUEST_PLACE_PICKER)
             } catch (e: ActivityNotFoundException) {
@@ -1024,15 +1025,15 @@ class LocationPickerActivity : AppCompatActivity(),
         }
     }
 
-    private fun isPlayServicesAvailable(): Boolean {
-        val googleAPI = GoogleApiAvailability.getInstance()
+    private fun isHuaweiServicesAvailable(): Boolean {
+        /*val googleAPI = HuaweiApiAvailability.getInstance()
         val result = googleAPI.isGooglePlayServicesAvailable(applicationContext)
         if (result != ConnectionResult.SUCCESS) {
             if (googleAPI.isUserResolvableError(result)) {
                 googleAPI.getErrorDialog(this, result, CONNECTION_FAILURE_RESOLUTION_REQUEST).show()
             }
             return false
-        }
+        }*/
         return true
     }
 
@@ -1082,7 +1083,7 @@ class LocationPickerActivity : AppCompatActivity(),
             hasWiderZoom = false
             map?.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
             currentMarker = addMarker(latLng)
-            map?.setOnMarkerDragListener(object : GoogleMap.OnMarkerDragListener {
+            map?.setOnMarkerDragListener(object : HuaweiMap.OnMarkerDragListener {
                 override fun onMarkerDragStart(marker: Marker) {
                 }
 
@@ -1339,13 +1340,13 @@ class LocationPickerActivity : AppCompatActivity(),
     }
 
     @Synchronized
-    private fun buildGoogleApiClient() {
-        val googleApiClientBuilder = GoogleApiClient.Builder(this).addConnectionCallbacks(this)
+    private fun buildHuaweiApiClient() {
+        val huaweiApiClientBuilder = HuaweiApiClient.Builder(this).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
+                //.addApi(LocationServices.API)
 
-        googleApiClient = googleApiClientBuilder.build()
-        googleApiClient?.connect()
+        huaweiApiClient = huaweiApiClientBuilder.build()
+        huaweiApiClient?.connect(this)
     }
 
     private fun addMarker(latLng: LatLng): Marker {
@@ -1542,4 +1543,8 @@ class LocationPickerActivity : AppCompatActivity(),
             return intent
         }
     }
+}
+
+interface LocationCallbackX {
+    fun onLocationChanged(location: Location)
 }

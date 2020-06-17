@@ -10,7 +10,7 @@
       android:layout_height="match_parent"
       android:id="@+id/map"
       tools:context="com.schibstedspain.leku.LocationPickerActivity"
-      android:name="com.google.android.gms.maps.SupportMapFragment"
+      android:name="com.huawei.hms.maps.SupportMapFragment"
       />
 
   <ImageView

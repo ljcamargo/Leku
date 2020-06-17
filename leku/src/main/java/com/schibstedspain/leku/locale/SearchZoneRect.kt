@@ -2,7 +2,7 @@ package com.schibstedspain.leku.locale
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.google.android.gms.maps.model.LatLng
+import com.huawei.hms.maps.model.LatLng
 
 data class SearchZoneRect(val lowerLeft: LatLng, val upperRight: LatLng) : Parcelable {
     constructor(parcel: Parcel) : this(

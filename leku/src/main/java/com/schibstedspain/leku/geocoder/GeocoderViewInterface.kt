@@ -3,7 +3,7 @@ package com.schibstedspain.leku.geocoder
 import android.location.Address
 import android.location.Location
 
-import com.google.android.gms.maps.model.LatLng
+import com.huawei.hms.maps.model.LatLng
 import java.util.TimeZone
 
 interface GeocoderViewInterface {
