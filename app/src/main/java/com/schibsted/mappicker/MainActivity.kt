@@ -56,16 +56,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        StrictMode.setThreadPolicy(
-                StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build())
-        StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().detectAll().penaltyLog().build())
+        //StrictMode.setThreadPolicy(
+        //        StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build())
+        //StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().detectAll().penaltyLog().build())
         setContentView(R.layout.activity_main)
         val mapButton = findViewById<View>(R.id.map_button)
         mapButton.setOnClickListener {
             val locationPickerIntent = LocationPickerActivity.Builder()
                     .withLocation(41.4036299, 2.1743558)
-                    // .withGeolocApiKey("<PUT API KEY HERE>")
-                    // .withGooglePlacesApiKey("<PUT API KEY HERE>")
+                    .withGooglePlacesApiKey(getString(R.string.api_key))
                     // .withSearchZone("es_ES")
                     // .withSearchZone(SearchZoneRect(LatLng(26.525467, -18.910366), LatLng(43.906271, 5.394197)))
                     .withDefaultLocaleSearchZone()

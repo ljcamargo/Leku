@@ -36,3 +36,4 @@ atlassian-ide-plugin.xml
 
 projectFilesBackup/.idea/*.xml
 app/agconnect-services.json
+.env
