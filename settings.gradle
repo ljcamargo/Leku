@@ -1,1 +1,1 @@
-include ':app', ':leku'
+include ':leku'
