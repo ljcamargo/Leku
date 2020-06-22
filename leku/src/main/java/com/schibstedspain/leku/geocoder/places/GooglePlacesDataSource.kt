@@ -2,24 +2,24 @@ package com.schibstedspain.leku.geocoder.places
 
 import android.location.Address
 import com.google.android.gms.maps.model.LatLng
-import com.huawei.hms.maps.model.LatLngBounds
 import com.google.android.gms.tasks.RuntimeExecutionException
-import com.huawei.hmf.tasks.Tasks
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.huawei.hmf.tasks.Task
+import com.huawei.hms.maps.model.LatLngBounds
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Observable.defer
-import java.util.Locale
+import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import kotlin.collections.ArrayList
+import kotlin.collections.List
+import kotlin.collections.listOf
 import com.google.android.gms.tasks.Tasks as GoogleTasks
-import com.google.android.gms.tasks.Task as GoogleTask
 
 private const val PREDICTIONS_WAITING_TIME: Long = 6
 private const val PLACE_BY_ID_WAITING_TIME: Long = 3

@@ -21,18 +21,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.ListView
-import android.widget.ProgressBar
-import android.widget.RelativeLayout
-import android.widget.TextView
-import android.widget.Toast
-import android.widget.LinearLayout
+import android.widget.*
 import androidx.annotation.RawRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -40,29 +29,18 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.Places
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.maps.GeoApiContext
 import com.huawei.hms.api.ConnectionResult
 import com.huawei.hms.api.HuaweiApiClient
-import com.huawei.hms.location.LocationCallback
-import com.huawei.hms.location.LocationServices
 import com.huawei.hms.maps.CameraUpdateFactory
 import com.huawei.hms.maps.HuaweiMap
 import com.huawei.hms.maps.HuaweiMap.MAP_TYPE_NORMAL
 import com.huawei.hms.maps.HuaweiMap.MAP_TYPE_SATELLITE
 import com.huawei.hms.maps.OnMapReadyCallback
 import com.huawei.hms.maps.SupportMapFragment
-import com.huawei.hms.maps.model.BitmapDescriptorFactory
-import com.huawei.hms.maps.model.CameraPosition
-import com.huawei.hms.maps.model.LatLng
-import com.huawei.hms.maps.model.MapStyleOptions
-import com.huawei.hms.maps.model.Marker
-import com.huawei.hms.maps.model.MarkerOptions
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.maps.GeoApiContext
-import com.schibstedspain.leku.geocoder.AndroidGeocoderDataSource
-import com.schibstedspain.leku.geocoder.GeocoderPresenter
-import com.schibstedspain.leku.geocoder.GeocoderRepository
-import com.schibstedspain.leku.geocoder.GeocoderViewInterface
-import com.schibstedspain.leku.geocoder.GoogleGeocoderDataSource
+import com.huawei.hms.maps.model.*
+import com.schibstedspain.leku.geocoder.*
 import com.schibstedspain.leku.geocoder.api.AddressBuilder
 import com.schibstedspain.leku.geocoder.api.NetworkClient
 import com.schibstedspain.leku.geocoder.places.GooglePlacesDataSource
@@ -72,8 +50,13 @@ import com.schibstedspain.leku.locale.SearchZoneRect
 import com.schibstedspain.leku.permissions.PermissionUtils
 import com.schibstedspain.leku.tracker.TrackEvents
 import com.schibstedspain.leku.utils.ReactiveLocationProvider
-import java.util.Locale
-import java.util.TimeZone
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.List
+import kotlin.collections.MutableList
+import kotlin.collections.MutableMap
+import kotlin.collections.isNotEmpty
 import kotlin.collections.set
 
 const val LATITUDE = "latitude"
@@ -1341,7 +1324,7 @@ class LocationPickerActivity : AppCompatActivity(),
     private fun buildHuaweiApiClient() {
         val huaweiApiClientBuilder = HuaweiApiClient.Builder(this).addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
-                //.addApi(LocationServices.API)
+                // .addApi(LocationServices.API)
 
         huaweiApiClient = huaweiApiClientBuilder.build()
         huaweiApiClient?.connect(this)
