@@ -11,11 +11,9 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.schibstedspain.leku.* // ktlint-disable no-wildcard-imports
-
-
 import com.schibstedspain.leku.tracker.LocationPickerTracker
 import com.schibstedspain.leku.tracker.TrackEvents
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 import kotlin.collections.ArrayList
 
