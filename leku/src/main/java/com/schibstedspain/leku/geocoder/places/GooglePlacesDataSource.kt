@@ -12,7 +12,7 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.huawei.hms.maps.model.LatLngBounds
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Observable.defer
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
