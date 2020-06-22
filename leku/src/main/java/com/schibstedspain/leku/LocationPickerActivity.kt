@@ -42,7 +42,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.Places
 import com.huawei.hms.api.ConnectionResult
 import com.huawei.hms.api.HuaweiApiClient
-//import com.google.android.gms.location.LocationListener
 import com.huawei.hms.location.LocationCallback
 import com.huawei.hms.location.LocationServices
 import com.huawei.hms.maps.CameraUpdateFactory
@@ -57,7 +56,6 @@ import com.huawei.hms.maps.model.LatLng
 import com.huawei.hms.maps.model.MapStyleOptions
 import com.huawei.hms.maps.model.Marker
 import com.huawei.hms.maps.model.MarkerOptions
-//import com.google.android.libraries.places.api.Places
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.maps.GeoApiContext
 import com.schibstedspain.leku.geocoder.AndroidGeocoderDataSource

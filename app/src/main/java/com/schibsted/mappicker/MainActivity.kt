@@ -6,28 +6,15 @@ import android.content.Intent
 import android.location.Address
 import android.location.Location
 import android.os.Bundle
-import android.os.StrictMode
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.schibstedspain.leku.ADDRESS
-import com.schibstedspain.leku.LATITUDE
-import com.schibstedspain.leku.LEKU_POI
-import com.schibstedspain.leku.LOCATION_ADDRESS
-import com.schibstedspain.leku.LONGITUDE
-import com.schibstedspain.leku.LekuPoi
-import com.schibstedspain.leku.LocationPicker
-import com.schibstedspain.leku.LocationPickerActivity
-import com.schibstedspain.leku.TIME_ZONE_DISPLAY_NAME
-import com.schibstedspain.leku.TIME_ZONE_ID
-import com.schibstedspain.leku.TRANSITION_BUNDLE
-import com.schibstedspain.leku.ZIPCODE
+import com.schibstedspain.leku.*
 import com.schibstedspain.leku.tracker.LocationPickerTracker
 import com.schibstedspain.leku.tracker.TrackEvents
-import java.util.UUID
+import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.List
 
 private const val MAP_BUTTON_REQUEST_CODE = 1
 private const val MAP_POIS_BUTTON_REQUEST_CODE = 2
