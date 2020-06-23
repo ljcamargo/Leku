@@ -12,7 +12,7 @@ import io.reactivex.rxjava3.core.ObservableEmitter;
 public abstract class BaseLocationObservableOnSubscribe<T> extends BaseObservableOnSubscribe<T> {
 
     protected BaseLocationObservableOnSubscribe(Context ctx) {
-        super(ctx, null);
+        super(ctx);
     }
 
     @Override

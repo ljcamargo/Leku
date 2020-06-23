@@ -5,11 +5,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.huawei.hms.api.ConnectionResult;
-import com.huawei.hms.api.Api;
 import com.huawei.hms.api.HuaweiApiClient;
-
-import java.util.Arrays;
-import java.util.List;
 
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
@@ -18,12 +14,9 @@ import io.reactivex.rxjava3.functions.Action;
 
 public abstract class BaseObservableOnSubscribe<T> implements ObservableOnSubscribe<T> {
     private final Context ctx;
-    private final List<Api<? extends Api.ApiOptions.NotRequiredOptions>> services;
 
-    @SafeVarargs
-    protected BaseObservableOnSubscribe(Context ctx, Api<? extends Api.ApiOptions.NotRequiredOptions>... services) {
+    protected BaseObservableOnSubscribe(Context ctx) {
         this.ctx = ctx;
-        this.services = Arrays.asList(services);
     }
 
     @Override
@@ -49,10 +42,6 @@ public abstract class BaseObservableOnSubscribe<T> implements ObservableOnSubscr
     private HuaweiApiClient createApiClient(ObservableEmitter<? super T> emitter) {
         ApiClientConnectionCallbacks apiClientConnectionCallbacks = new ApiClientConnectionCallbacks(ctx, emitter);
         HuaweiApiClient.Builder apiClientBuilder = new HuaweiApiClient.Builder(ctx);
-
-        for (Api<? extends Api.ApiOptions.NotRequiredOptions> service : services) {
-            apiClientBuilder = apiClientBuilder.addApi(service);
-        }
 
         apiClientBuilder = apiClientBuilder
                 .addConnectionCallbacks(apiClientConnectionCallbacks)

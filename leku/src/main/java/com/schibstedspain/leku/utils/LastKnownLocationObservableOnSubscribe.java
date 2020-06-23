@@ -26,15 +26,12 @@ public class LastKnownLocationObservableOnSubscribe extends BaseLocationObservab
     protected void onLocationProviderClientReady(FusedLocationProviderClient locationProviderClient,
                                                  final ObservableEmitter<? super Location> emitter) {
         locationProviderClient.getLastLocation()
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (emitter.isDisposed()) return;
-                        if (location != null) {
-                            emitter.onNext(location);
-                        }
-                        emitter.onComplete();
+                .addOnSuccessListener(location -> {
+                    if (emitter.isDisposed()) return;
+                    if (location != null) {
+                        emitter.onNext(location);
                     }
+                    emitter.onComplete();
                 })
                 .addOnFailureListener(new BaseFailureListener<>(emitter));
     }
