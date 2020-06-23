@@ -39,7 +39,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.libraries.places.api.Places
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.maps.GeoApiContext
 import com.huawei.hms.api.ConnectionResult
@@ -56,27 +55,21 @@ import com.huawei.hms.maps.model.LatLng
 import com.huawei.hms.maps.model.MapStyleOptions
 import com.huawei.hms.maps.model.Marker
 import com.huawei.hms.maps.model.MarkerOptions
+import com.huawei.hms.site.api.SearchServiceFactory
 import com.schibstedspain.leku.geocoder.AndroidGeocoderDataSource
 import com.schibstedspain.leku.geocoder.GeocoderPresenter
 import com.schibstedspain.leku.geocoder.GeocoderRepository
 import com.schibstedspain.leku.geocoder.GeocoderViewInterface
-import com.schibstedspain.leku.geocoder.GoogleGeocoderDataSource
-import com.schibstedspain.leku.geocoder.api.AddressBuilder
-import com.schibstedspain.leku.geocoder.api.NetworkClient
-import com.schibstedspain.leku.geocoder.places.GooglePlacesDataSource
+import com.schibstedspain.leku.geocoder.places.HuaweiSitesDataSource
 import com.schibstedspain.leku.geocoder.timezone.GoogleTimeZoneDataSource
 import com.schibstedspain.leku.locale.DefaultCountryLocaleRect
 import com.schibstedspain.leku.locale.SearchZoneRect
 import com.schibstedspain.leku.permissions.PermissionUtils
 import com.schibstedspain.leku.tracker.TrackEvents
-import com.schibstedspain.leku.utils.ReactiveLocationProvider
-import java.util.* // ktlint-disable no-wildcard-imports
+import com.schibstedspain.leku.utils.BaseLocationService
+import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.collections.List
-import kotlin.collections.MutableList
-import kotlin.collections.MutableMap
-import kotlin.collections.isNotEmpty
 import kotlin.collections.set
 
 const val LATITUDE = "latitude"
@@ -92,7 +85,6 @@ const val SEARCH_ZONE_DEFAULT_LOCALE = "search_zone_default_locale"
 const val BACK_PRESSED_RETURN_OK = "back_pressed_return_ok"
 const val ENABLE_SATELLITE_VIEW = "enable_satellite_view"
 const val ENABLE_LOCATION_PERMISSION_REQUEST = "enable_location_permission_request"
-const val ENABLE_GOOGLE_PLACES = "enable_google_places"
 const val ENABLE_GOOGLE_TIME_ZONE = "enable_google_time_zone"
 const val POIS_LIST = "pois_list"
 const val LEKU_POI = "leku_poi"
@@ -165,7 +157,7 @@ class LocationPickerActivity : AppCompatActivity(),
     private var shouldReturnOkOnBackPressed = false
     private var enableSatelliteView = true
     private var enableLocationPermissionRequest = true
-    private var googlePlacesApiKey: String? = null
+    private var huaweiSitesApiKey: String? = null
     private var isGoogleTimeZoneEnabled = false
     private var searchZone: String? = null
     private var searchZoneRect: SearchZoneRect? = null
@@ -174,7 +166,6 @@ class LocationPickerActivity : AppCompatActivity(),
     private var lekuPoisMarkersMap: MutableMap<String, LekuPoi>? = null
     private var currentMarker: Marker? = null
     private var textWatcher: TextWatcher? = null
-    private var apiInteractor: GoogleGeocoderDataSource? = null
     private var isVoiceSearchEnabled = true
     private var isUnnamedRoadVisible = true
     private var mapStyle: Int? = null
@@ -312,20 +303,23 @@ class LocationPickerActivity : AppCompatActivity(),
     }
 
     private fun setUpMainVariables() {
-        var placesDataSource: GooglePlacesDataSource? = null
-        if (!Places.isInitialized() && !googlePlacesApiKey.isNullOrEmpty()) {
-            googlePlacesApiKey?.let {
-                Places.initialize(applicationContext, it)
-            }
-            placesDataSource = GooglePlacesDataSource(Places.createClient(this))
+        var sitesDataSource: HuaweiSitesDataSource? = null
+        if (!huaweiSitesApiKey.isNullOrEmpty()) {
+            val client = SearchServiceFactory.create(this, huaweiSitesApiKey)
+            sitesDataSource = HuaweiSitesDataSource(client)
         }
         val geocoder = Geocoder(this, Locale.getDefault())
-        apiInteractor = GoogleGeocoderDataSource(NetworkClient(), AddressBuilder())
-        val geocoderRepository = GeocoderRepository(AndroidGeocoderDataSource(geocoder), apiInteractor!!)
-        val timeZoneDataSource = GoogleTimeZoneDataSource(
-                GeoApiContext.Builder().apiKey(GoogleTimeZoneDataSource.getApiKey(this)).build())
+        val nativeGeocoder = AndroidGeocoderDataSource(geocoder)
+        //val huaweiGeocoder = HuaweiGeocoderDataSource(geocoder)
+        val huaweiGeocoder = nativeGeocoder
+        val geocoderRepository = GeocoderRepository(nativeGeocoder, huaweiGeocoder)
+        val timeZoneDataSource = GoogleTimeZoneDataSource(GeoApiContext.Builder().apiKey(GoogleTimeZoneDataSource.getApiKey(this)).build())
         geocoderPresenter = GeocoderPresenter(
-                ReactiveLocationProvider(applicationContext), geocoderRepository, placesDataSource, timeZoneDataSource)
+                locationService = BaseLocationService(applicationContext),
+                geocoderRepository = geocoderRepository,
+                huaweiSitesDataSource = sitesDataSource,
+                googleTimeZoneDataSource = timeZoneDataSource
+        )
         geocoderPresenter?.setUI(this)
         progressBar = findViewById(R.id.loading_progress_bar)
         progressBar?.visibility = View.GONE
@@ -518,7 +512,7 @@ class LocationPickerActivity : AppCompatActivity(),
         updateAddressLayoutVisibility()
         updateVoiceSearchVisibility()
 
-        if (!googlePlacesApiKey.isNullOrEmpty()) {
+        if (!huaweiSitesApiKey.isNullOrEmpty()) {
             geocoderPresenter?.enableGooglePlaces()
         }
     }
@@ -892,11 +886,8 @@ class LocationPickerActivity : AppCompatActivity(),
         if (savedInstanceState.keySet().contains(LAYOUTS_TO_HIDE)) {
             setLayoutVisibilityFromBundle(savedInstanceState)
         }
-        if (savedInstanceState.keySet().contains(GEOLOC_API_KEY)) {
-            apiInteractor?.setApiKey(savedInstanceState.getString(GEOLOC_API_KEY, ""))
-        }
         if (savedInstanceState.keySet().contains(PLACES_API_KEY)) {
-            googlePlacesApiKey = savedInstanceState.getString(PLACES_API_KEY, "")
+            huaweiSitesApiKey = savedInstanceState.getString(PLACES_API_KEY, "")
         }
         if (savedInstanceState.keySet().contains(ENABLE_GOOGLE_TIME_ZONE)) {
             isGoogleTimeZoneEnabled = savedInstanceState.getBoolean(ENABLE_GOOGLE_TIME_ZONE, false)
@@ -963,11 +954,8 @@ class LocationPickerActivity : AppCompatActivity(),
         if (transitionBundle.keySet().contains(POIS_LIST)) {
             poisList = transitionBundle.getParcelableArrayList(POIS_LIST)
         }
-        if (transitionBundle.keySet().contains(GEOLOC_API_KEY)) {
-            apiInteractor!!.setApiKey(transitionBundle.getString(GEOLOC_API_KEY, ""))
-        }
         if (transitionBundle.keySet().contains(PLACES_API_KEY)) {
-            googlePlacesApiKey = transitionBundle.getString(PLACES_API_KEY, "")
+            huaweiSitesApiKey = transitionBundle.getString(PLACES_API_KEY, "")
         }
         if (transitionBundle.keySet().contains(ENABLE_GOOGLE_TIME_ZONE)) {
             isGoogleTimeZoneEnabled = transitionBundle.getBoolean(ENABLE_GOOGLE_TIME_ZONE, false)
@@ -1402,7 +1390,7 @@ class LocationPickerActivity : AppCompatActivity(),
         private var shouldReturnOkOnBackPressed = false
         private var lekuPois: List<LekuPoi>? = null
         private var geolocApiKey: String? = null
-        private var googlePlacesApiKey: String? = null
+        private var huaweiSitesApiKey: String? = null
         private var googleTimeZoneEnabled = false
         private var voiceSearchEnabled = true
         private var mapStyle: Int? = null
@@ -1474,7 +1462,12 @@ class LocationPickerActivity : AppCompatActivity(),
         }
 
         fun withGooglePlacesApiKey(apiKey: String): Builder {
-            this.googlePlacesApiKey = apiKey
+            this.huaweiSitesApiKey = apiKey
+            return this
+        }
+
+        fun withHuaweiSitesApiKey(apiKey: String): Builder {
+            this.huaweiSitesApiKey = apiKey
             return this
         }
 
@@ -1532,8 +1525,8 @@ class LocationPickerActivity : AppCompatActivity(),
             geolocApiKey?.let {
                 intent.putExtra(GEOLOC_API_KEY, geolocApiKey)
             }
-            googlePlacesApiKey?.let {
-                intent.putExtra(PLACES_API_KEY, googlePlacesApiKey)
+            huaweiSitesApiKey?.let {
+                intent.putExtra(PLACES_API_KEY, huaweiSitesApiKey)
             }
             mapStyle?.let { style -> intent.putExtra(MAP_STYLE, style) }
             intent.putExtra(ENABLE_GOOGLE_TIME_ZONE, googleTimeZoneEnabled)

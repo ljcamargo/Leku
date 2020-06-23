@@ -3,44 +3,21 @@ package com.schibstedspain.leku.geocoder
 import android.location.Address
 import android.location.Geocoder
 import com.huawei.hms.maps.model.LatLng
-import io.reactivex.rxjava3.core.Observable
-import java.io.IOException
 
 private const val MAX_RESULTS = 5
 
 class AndroidGeocoderDataSource(private val geocoder: Geocoder) : GeocoderInteractorDataSource {
 
-    override fun getFromLocationName(query: String): Observable<List<Address>> {
-        return Observable.create { emitter ->
-            try {
-                emitter.onNext(geocoder.getFromLocationName(query, MAX_RESULTS))
-                emitter.onComplete()
-            } catch (e: IOException) {
-                emitter.tryOnError(e)
-            }
-        }
+    override suspend fun getFromLocationName(query: String): List<Address> {
+        return geocoder.getFromLocationName(query, MAX_RESULTS)
     }
 
-    override fun getFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng): Observable<List<Address>> {
-        return Observable.create { emitter ->
-            try {
-                emitter.onNext(geocoder.getFromLocationName(query, MAX_RESULTS, lowerLeft.latitude,
-                        lowerLeft.longitude, upperRight.latitude, upperRight.longitude))
-                emitter.onComplete()
-            } catch (e: IOException) {
-                emitter.tryOnError(e)
-            }
-        }
+    override suspend fun getFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng): List<Address> {
+        return geocoder.getFromLocationName(query, MAX_RESULTS, lowerLeft.latitude,
+                lowerLeft.longitude, upperRight.latitude, upperRight.longitude)
     }
 
-    override fun getFromLocation(latitude: Double, longitude: Double): Observable<List<Address>> {
-        return Observable.create { emitter ->
-            try {
-                emitter.onNext(geocoder.getFromLocation(latitude, longitude, MAX_RESULTS))
-                emitter.onComplete()
-            } catch (e: IOException) {
-                emitter.tryOnError(e)
-            }
-        }
+    override suspend fun getFromLocation(latitude: Double, longitude: Double): List<Address> {
+        return geocoder.getFromLocation(latitude, longitude, MAX_RESULTS)
     }
 }

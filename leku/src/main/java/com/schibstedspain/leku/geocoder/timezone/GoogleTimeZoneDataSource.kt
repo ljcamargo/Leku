@@ -28,6 +28,7 @@ class GoogleTimeZoneDataSource(private val geoApiContext: GeoApiContext) {
 
     fun getTimeZone(latitude: Double, longitude: Double): TimeZone? {
         try {
+
             return TimeZoneApi.getTimeZone(geoApiContext, LatLng(latitude, longitude)).await()
         } catch (ignored: ApiException) {
         } catch (ignored: InterruptedException) {

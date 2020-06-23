@@ -2,8 +2,6 @@ package com.schibstedspain.leku.geocoder
 
 import android.location.Address
 import com.huawei.hms.maps.model.LatLng
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.schedulers.Schedulers
 
 private const val RETRY_COUNT = 3
 
@@ -12,24 +10,27 @@ class GeocoderRepository(
     private val googleGeocoder: GeocoderInteractorDataSource
 ) {
 
-    fun getFromLocationName(query: String): Observable<List<Address>> {
-        return androidGeocoder.getFromLocationName(query)
-                .subscribeOn(Schedulers.newThread())
-                .retry(RETRY_COUNT.toLong())
-                .onErrorResumeWith(googleGeocoder.getFromLocationName(query))
+    suspend fun getFromLocationName(query: String): List<Address> {
+        return try {
+            androidGeocoder.getFromLocationName(query)
+        } catch (exception: Exception) {
+            googleGeocoder.getFromLocationName(query)
+        }
     }
 
-    fun getFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng): Observable<List<Address>> {
-        return androidGeocoder.getFromLocationName(query, lowerLeft, upperRight)
-                .subscribeOn(Schedulers.newThread())
-                .retry(RETRY_COUNT.toLong())
-                .onErrorResumeWith(googleGeocoder.getFromLocationName(query, lowerLeft, upperRight))
+    suspend fun getFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng): List<Address> {
+        return try {
+            androidGeocoder.getFromLocationName(query, lowerLeft, upperRight)
+        } catch (exception: Exception) {
+            googleGeocoder.getFromLocationName(query, lowerLeft, upperRight)
+        }
     }
 
-    fun getFromLocation(latLng: LatLng): Observable<List<Address>> {
-        return androidGeocoder.getFromLocation(latLng.latitude, latLng.longitude)
-                .subscribeOn(Schedulers.newThread())
-                .retry(RETRY_COUNT.toLong())
-                .onErrorResumeWith(googleGeocoder.getFromLocation(latLng.latitude, latLng.longitude))
+    suspend fun getFromLocation(latLng: LatLng): List<Address> {
+        return try {
+            androidGeocoder.getFromLocation(latLng.latitude, latLng.longitude)
+        } catch (exception: Exception) {
+            googleGeocoder.getFromLocation(latLng.latitude, latLng.longitude)
+        }
     }
 }

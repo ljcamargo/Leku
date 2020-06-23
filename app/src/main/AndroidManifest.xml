@@ -21,20 +21,7 @@
       android:label="@string/leku_app_name"
       android:theme="@style/AppTheme"
       android:supportsRtl="true"
-      tools:ignore="GoogleAppIndexingWarning"
-      >
-
-    <meta-data
-        android:name="com.google.android.gms.version"
-        android:value="@integer/google_play_services_version"
-        />
-
-<!-- Use this if only using Maps and not Places
-    <meta-data
-        android:name="com.google.android.maps.v2.API_KEY"
-        android:value="@string/google_maps_key"
-        />
--->
+      tools:ignore="GoogleAppIndexingWarning">
 
     <meta-data
         android:name="com.google.android.geo.API_KEY"
