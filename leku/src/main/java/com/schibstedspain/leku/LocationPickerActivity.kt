@@ -70,7 +70,7 @@ import com.schibstedspain.leku.locale.SearchZoneRect
 import com.schibstedspain.leku.permissions.PermissionUtils
 import com.schibstedspain.leku.tracker.TrackEvents
 import com.schibstedspain.leku.utils.ReactiveLocationProvider
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.List
