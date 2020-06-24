@@ -42,7 +42,7 @@ class GeocoderPresenter @JvmOverloads constructor(
     }
 
     fun getLastKnownLocation() {
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             try {
                 locationService.getLastKnownLocation(Dispatchers.IO)?.let {
                     view?.showLastLocation(it)
@@ -57,7 +57,7 @@ class GeocoderPresenter @JvmOverloads constructor(
 
     fun getFromLocationName(query: String) {
         view?.willLoadLocation()
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             try {
                 val locations = geocoderRepository.getFromLocationName(query)
                 view?.showLocations(locations)
@@ -71,7 +71,7 @@ class GeocoderPresenter @JvmOverloads constructor(
 
     fun getFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng) {
         view?.willLoadLocation()
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             try {
                 val geoCodeAddresses = geocoderRepository.getFromLocationName(query, lowerLeft, upperRight)
                 val sitesAddresses = getPlacesFromLocationName(query, lowerLeft, upperRight)
@@ -87,7 +87,7 @@ class GeocoderPresenter @JvmOverloads constructor(
 
     fun getDebouncedFromLocationName(query: String, debounceTime: Int) {
         view?.willLoadLocation()
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             try {
                 val locations = geocoderRepository.getFromLocationName(query)
                 // debounce(debounceTime.toLong(), scope) {}
@@ -102,7 +102,7 @@ class GeocoderPresenter @JvmOverloads constructor(
 
     fun getDebouncedFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng, debounceTime: Int) {
         view?.willLoadLocation()
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             try {
                 val geoCodeAddresses = geocoderRepository.getFromLocationName(query, lowerLeft, upperRight)
                 val sitesAddresses = getPlacesFromLocationName(query, lowerLeft, upperRight)
@@ -119,7 +119,7 @@ class GeocoderPresenter @JvmOverloads constructor(
 
     fun getInfoFromLocation(latLng: LatLng) {
         view?.willGetLocationInfo(latLng)
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
             try {
                 val location = geocoderRepository.getFromLocation(latLng).first()
                 view?.showLocationInfo(returnTimeZone(location)!!)

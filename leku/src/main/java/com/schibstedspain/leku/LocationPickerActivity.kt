@@ -67,6 +67,7 @@ import com.schibstedspain.leku.locale.SearchZoneRect
 import com.schibstedspain.leku.permissions.PermissionUtils
 import com.schibstedspain.leku.tracker.TrackEvents
 import com.schibstedspain.leku.utils.BaseLocationService
+import kotlinx.coroutines.GlobalScope
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
