@@ -5,6 +5,7 @@ import com.huawei.hms.maps.model.LatLng
 import com.huawei.hms.maps.model.LatLngBounds
 import com.schibstedspain.leku.geocoder.places.HuaweiSitesDataSource
 import com.schibstedspain.leku.geocoder.timezone.GoogleTimeZoneDataSource
+import com.schibstedspain.leku.geocoder.timezone.HuaweiTimeZoneDataSource
 import com.schibstedspain.leku.utils.BaseLocationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +22,7 @@ class GeocoderPresenter @JvmOverloads constructor(
         private val locationService: BaseLocationService,
         private val geocoderRepository: GeocoderRepository,
         private val huaweiSitesDataSource: HuaweiSitesDataSource? = null,
-        private val googleTimeZoneDataSource: GoogleTimeZoneDataSource? = null,
+        private val timeZoneDataSource: HuaweiTimeZoneDataSource? = null,
         private val scope: CoroutineScope = GlobalScope
 ) {
 
@@ -131,9 +132,9 @@ class GeocoderPresenter @JvmOverloads constructor(
         }
     }
 
-    private fun returnTimeZone(address: Address): Pair<Address, TimeZone?>? {
+    private suspend fun returnTimeZone(address: Address): Pair<Address, TimeZone?>? {
         val timeZone = try {
-            googleTimeZoneDataSource?.getTimeZone(address.latitude, address.longitude)
+            timeZoneDataSource?.getTimeZone(address.latitude, address.longitude)
         } catch (exception: Exception) {
             null
         }

@@ -40,7 +40,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.maps.GeoApiContext
 import com.huawei.hms.api.ConnectionResult
 import com.huawei.hms.api.HuaweiApiClient
 import com.huawei.hms.maps.CameraUpdateFactory
@@ -61,13 +60,12 @@ import com.schibstedspain.leku.geocoder.GeocoderPresenter
 import com.schibstedspain.leku.geocoder.GeocoderRepository
 import com.schibstedspain.leku.geocoder.GeocoderViewInterface
 import com.schibstedspain.leku.geocoder.places.HuaweiSitesDataSource
-import com.schibstedspain.leku.geocoder.timezone.GoogleTimeZoneDataSource
+import com.schibstedspain.leku.geocoder.timezone.HuaweiTimeZoneDataSource
 import com.schibstedspain.leku.locale.DefaultCountryLocaleRect
 import com.schibstedspain.leku.locale.SearchZoneRect
 import com.schibstedspain.leku.permissions.PermissionUtils
 import com.schibstedspain.leku.tracker.TrackEvents
 import com.schibstedspain.leku.utils.BaseLocationService
-import kotlinx.coroutines.GlobalScope
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -305,21 +303,21 @@ class LocationPickerActivity : AppCompatActivity(),
 
     private fun setUpMainVariables() {
         var sitesDataSource: HuaweiSitesDataSource? = null
+        var timeZoneDataSource: HuaweiTimeZoneDataSource? = null
         if (!huaweiSitesApiKey.isNullOrEmpty()) {
             val client = SearchServiceFactory.create(this, huaweiSitesApiKey)
             sitesDataSource = HuaweiSitesDataSource(client)
+            timeZoneDataSource = HuaweiTimeZoneDataSource(huaweiSitesApiKey!!)
         }
         val geocoder = Geocoder(this, Locale.getDefault())
         val nativeGeocoder = AndroidGeocoderDataSource(geocoder)
-        //val huaweiGeocoder = HuaweiGeocoderDataSource(geocoder)
         val huaweiGeocoder = nativeGeocoder
         val geocoderRepository = GeocoderRepository(nativeGeocoder, huaweiGeocoder)
-        val timeZoneDataSource = GoogleTimeZoneDataSource(GeoApiContext.Builder().apiKey(GoogleTimeZoneDataSource.getApiKey(this)).build())
         geocoderPresenter = GeocoderPresenter(
                 locationService = BaseLocationService(applicationContext),
                 geocoderRepository = geocoderRepository,
                 huaweiSitesDataSource = sitesDataSource,
-                googleTimeZoneDataSource = timeZoneDataSource
+                timeZoneDataSource = timeZoneDataSource
         )
         geocoderPresenter?.setUI(this)
         progressBar = findViewById(R.id.loading_progress_bar)
