@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: "org.jlleitschuh.gradle.ktlint"
+//apply plugin: "org.jlleitschuh.gradle.ktlint"
 apply plugin: 'com.huawei.agconnect'
 
 android {
@@ -60,12 +60,12 @@ detekt {
   }
 }
 
-ktlint {
+/*ktlint {
   reporters {
 	reporter "plain"
 	reporter "checkstyle"
   }
-}
+}*/
 
 dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])

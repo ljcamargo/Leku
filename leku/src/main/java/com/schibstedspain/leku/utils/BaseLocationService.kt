@@ -12,10 +12,10 @@ import kotlin.coroutines.CoroutineContext
 
 class BaseLocationService(val context: Context) {
 
-    fun getApiClient(ready: (ApiClient?)->Unit) {
+    fun getApiClient(ready: (ApiClient?) -> Unit) {
         var client: HuaweiApiClient? = null
         client = HuaweiApiClient.Builder(context)
-            .addConnectionCallbacks(object: HuaweiApiClient.ConnectionCallbacks {
+            .addConnectionCallbacks(object : HuaweiApiClient.ConnectionCallbacks {
                 override fun onConnected() = ready(client)
                 override fun onConnectionSuspended(error: Int) = ready(null)
             })

@@ -60,8 +60,8 @@ class NetworkClient {
             connection.readTimeout = READ_TIMEOUT
             connection.connectTimeout = CONNECT_TIMEOUT
             connection.requestMethod = "POST"
-            connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+            connection.setRequestProperty("Accept", "application/json")
             connection.doInput = true
             val outputStream = connection.outputStream
             outputStream.write(body.toByteArray(Charset.defaultCharset()))

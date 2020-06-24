@@ -20,11 +20,11 @@ private const val RETRY_COUNT = 3
 private const val MAX_PLACES_RESULTS = 3
 
 class GeocoderPresenter @JvmOverloads constructor(
-        private val locationService: BaseLocationService,
-        private val geocoderRepository: GeocoderRepository,
-        private val huaweiSitesDataSource: HuaweiSitesDataSource? = null,
-        private val timeZoneDataSource: HuaweiTimeZoneDataSource? = null,
-        private val scope: CoroutineScope = GlobalScope
+    private val locationService: BaseLocationService,
+    private val geocoderRepository: GeocoderRepository,
+    private val huaweiSitesDataSource: HuaweiSitesDataSource? = null,
+    private val timeZoneDataSource: HuaweiTimeZoneDataSource? = null,
+    private val scope: CoroutineScope = GlobalScope
 ) {
 
     private var view: GeocoderViewInterface? = null
@@ -49,8 +49,7 @@ class GeocoderPresenter @JvmOverloads constructor(
                 locationService.getLastKnownLocation(Dispatchers.IO)?.let {
                     view?.showLastLocation(it)
                 }
-            } catch (exception: java.lang.Exception)  {
-
+            } catch (exception: java.lang.Exception) {
             } finally {
                 view?.didGetLastLocation()
             }
@@ -63,7 +62,7 @@ class GeocoderPresenter @JvmOverloads constructor(
             try {
                 val locations = geocoderRepository.getFromLocationName(query)
                 view?.showLocations(locations)
-            } catch (exception: java.lang.Exception)  {
+            } catch (exception: java.lang.Exception) {
                 view?.showLoadLocationError()
             } finally {
                 view?.didLoadLocation()

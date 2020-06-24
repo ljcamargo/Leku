@@ -6,7 +6,6 @@ import java.util.TimeZone
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-
 class HuaweiTimeZoneDataSource(private val apiKey: String) {
 
     val url = "https://siteapi.cloud.huawei.com/mapApi/v1/timezoneService/getTimezone?key="
@@ -21,7 +20,7 @@ class HuaweiTimeZoneDataSource(private val apiKey: String) {
         val json = JSONObject().apply {
             put("location", location)
             put("timestamp", System.currentTimeMillis() / 1000)
-            //put("language", "es")
+            // put("language", "es")
         }
         val result = networkClient.postUrl(
             request = url + apiKey,

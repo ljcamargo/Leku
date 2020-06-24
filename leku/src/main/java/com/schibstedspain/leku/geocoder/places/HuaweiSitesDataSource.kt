@@ -16,7 +16,6 @@ import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-
 class HuaweiSitesDataSource(private val searchService: SearchService) {
 
     suspend fun getFromLocationName(query: String, bounds: LatLngBounds): List<Address> {
@@ -32,7 +31,7 @@ class HuaweiSitesDataSource(private val searchService: SearchService) {
 
     suspend fun resultListener(request: QuerySuggestionRequest): QuerySuggestionResponse? {
         return suspendCoroutine { coroutine ->
-            val callback = object: SearchResultListener<QuerySuggestionResponse>  {
+            val callback = object : SearchResultListener<QuerySuggestionResponse> {
                 override fun onSearchError(status: SearchStatus?) {
                     coroutine.resume(null)
                 }
@@ -51,11 +50,11 @@ class HuaweiSitesDataSource(private val searchService: SearchService) {
                 ?: listOf()
     }
 
-    suspend fun getSiteData(siteId:String): Site? = suspendCoroutine { coroutine ->
+    suspend fun getSiteData(siteId: String): Site? = suspendCoroutine { coroutine ->
         val detailRequest = DetailSearchRequest().also {
             it.siteId = siteId
         }
-        val listener = object: SearchResultListener<DetailSearchResponse> {
+        val listener = object : SearchResultListener<DetailSearchResponse> {
             override fun onSearchError(status: SearchStatus?) {
                 coroutine.resume(null)
             }
@@ -65,7 +64,6 @@ class HuaweiSitesDataSource(private val searchService: SearchService) {
         }
         searchService.detailSearch(detailRequest, listener)
     }
-
 
     private fun siteToAddress(site: Site): Address {
         val address = Address(Locale.getDefault())
