@@ -4,14 +4,15 @@ import android.location.Address
 import com.huawei.hms.maps.model.LatLng
 import com.huawei.hms.maps.model.LatLngBounds
 import com.schibstedspain.leku.geocoder.places.HuaweiSitesDataSource
-import com.schibstedspain.leku.geocoder.timezone.GoogleTimeZoneDataSource
 import com.schibstedspain.leku.geocoder.timezone.HuaweiTimeZoneDataSource
 import com.schibstedspain.leku.utils.BaseLocationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import java.util.* // ktlint-disable no-wildcard-imports
 
@@ -86,13 +87,16 @@ class GeocoderPresenter @JvmOverloads constructor(
         }
     }
 
+    @OptIn(FlowPreview::class)
     fun getDebouncedFromLocationName(query: String, debounceTime: Int) {
         view?.willLoadLocation()
         scope.launch(Dispatchers.Main) {
             try {
-                val locations = geocoderRepository.getFromLocationName(query)
-                // debounce(debounceTime.toLong(), scope) {}
-                view?.showDebouncedLocations(locations)
+                flow {
+                    emit(geocoderRepository.getFromLocationName(query))
+                }.debounce(debounceTime.toLong()).collect {
+                    view?.showDebouncedLocations(it)
+                }
             } catch (exception: Exception) {
                 view?.showLoadLocationError()
             } finally {
@@ -105,11 +109,13 @@ class GeocoderPresenter @JvmOverloads constructor(
         view?.willLoadLocation()
         scope.launch(Dispatchers.Main) {
             try {
-                val geoCodeAddresses = geocoderRepository.getFromLocationName(query, lowerLeft, upperRight)
-                val sitesAddresses = getPlacesFromLocationName(query, lowerLeft, upperRight)
-                val allAddresses = sitesAddresses + geoCodeAddresses
-                // debounce(debounceTime.toLong(), scope) {}
-                view?.showDebouncedLocations(allAddresses)
+                flow {
+                    val geoCodeAddresses = geocoderRepository.getFromLocationName(query, lowerLeft, upperRight)
+                    val sitesAddresses = getPlacesFromLocationName(query, lowerLeft, upperRight)
+                    emit(sitesAddresses + geoCodeAddresses)
+                }.debounce(debounceTime.toLong()).collect {
+                    view?.showDebouncedLocations(it)
+                }
             } catch (exception: Exception) {
                 view?.showLoadLocationError()
             } finally {
@@ -157,21 +163,6 @@ class GeocoderPresenter @JvmOverloads constructor(
                     .toList()
         } else {
             listOf()
-        }
-    }
-
-    fun <T> debounce(
-            waitMs: Long = 300L,
-            coroutineScope: CoroutineScope,
-            destinationFunction: (T) -> Unit
-    ): (T) -> Unit {
-        var debounceJob: Job? = null
-        return { param: T ->
-            debounceJob?.cancel()
-            debounceJob = coroutineScope.launch {
-                delay(waitMs)
-                destinationFunction(param)
-            }
         }
     }
 }
