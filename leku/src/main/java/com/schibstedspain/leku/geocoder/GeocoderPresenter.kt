@@ -8,13 +8,9 @@ import com.schibstedspain.leku.geocoder.timezone.HuaweiTimeZoneDataSource
 import com.schibstedspain.leku.utils.BaseLocationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 
 private const val RETRY_COUNT = 3
 private const val MAX_PLACES_RESULTS = 3
@@ -78,43 +74,6 @@ class GeocoderPresenter @JvmOverloads constructor(
                 val sitesAddresses = getPlacesFromLocationName(query, lowerLeft, upperRight)
                 val allAddresses = sitesAddresses + geoCodeAddresses
                 view?.showLocations(allAddresses)
-            } catch (exception: Exception) {
-                view?.showLoadLocationError()
-            } finally {
-                view?.didLoadLocation()
-            }
-        }
-    }
-
-    @OptIn(FlowPreview::class)
-    fun getDebouncedFromLocationName(query: String, debounceTime: Int) {
-        view?.willLoadLocation()
-        scope.launch(Dispatchers.Main) {
-            try {
-                flow {
-                    emit(geocoderRepository.getFromLocationName(query))
-                }.debounce(debounceTime.toLong()).collect {
-                    view?.showDebouncedLocations(it)
-                }
-            } catch (exception: Exception) {
-                view?.showLoadLocationError()
-            } finally {
-                view?.didLoadLocation()
-            }
-        }
-    }
-
-    fun getDebouncedFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng, debounceTime: Int) {
-        view?.willLoadLocation()
-        scope.launch(Dispatchers.Main) {
-            try {
-                flow {
-                    val geoCodeAddresses = geocoderRepository.getFromLocationName(query, lowerLeft, upperRight)
-                    val sitesAddresses = getPlacesFromLocationName(query, lowerLeft, upperRight)
-                    emit(sitesAddresses + geoCodeAddresses)
-                }.debounce(debounceTime.toLong()).collect {
-                    view?.showDebouncedLocations(it)
-                }
             } catch (exception: Exception) {
                 view?.showLoadLocationError()
             } finally {

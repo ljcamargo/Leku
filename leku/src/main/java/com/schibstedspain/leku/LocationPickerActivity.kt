@@ -66,7 +66,14 @@ import com.schibstedspain.leku.locale.SearchZoneRect
 import com.schibstedspain.leku.permissions.PermissionUtils
 import com.schibstedspain.leku.tracker.TrackEvents
 import com.schibstedspain.leku.utils.BaseLocationService
-import java.util.* // ktlint-disable no-wildcard-imports
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.whileSelect
+import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.set
@@ -164,7 +171,7 @@ class LocationPickerActivity : AppCompatActivity(),
     private var poisList: List<LekuPoi>? = null
     private var lekuPoisMarkersMap: MutableMap<String, LekuPoi>? = null
     private var currentMarker: Marker? = null
-    private var textWatcher: TextWatcher? = null
+    //private var textWatcher: TextWatcher? = null
     private var isVoiceSearchEnabled = true
     private var isUnnamedRoadVisible = true
     private var mapStyle: Int? = null
@@ -173,40 +180,61 @@ class LocationPickerActivity : AppCompatActivity(),
     private lateinit var toolbar: Toolbar
     private lateinit var timeZone: TimeZone
 
-    private val searchTextWatcher: TextWatcher
-        get() = object : TextWatcher {
-            override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {
-            }
+    fun EditText.onTextChanged(): ReceiveChannel<String> =
+        Channel<String>(capacity = Channel.UNLIMITED).also { channel ->
+            addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(editable: Editable?) {
+                    editable?.toString().orEmpty().let(channel::offer)
+                }
+                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
+                override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
 
-            override fun onTextChanged(charSequence: CharSequence, start: Int, count: Int, after: Int) {
-                if ("" == charSequence.toString()) {
-                    if (isLegacyLayoutEnabled) {
-                        adapter?.let {
-                            it.clear()
-                            it.notifyDataSetChanged()
-                        }
-                    } else {
-                        searchAdapter?.let {
-                            it.notifyDataSetChanged()
-                        }
-                    }
-                    showLocationInfoLayout()
-                    clearSearchButton?.visibility = View.INVISIBLE
-                    searchOption?.setIcon(R.drawable.leku_ic_mic_legacy)
-                    updateVoiceSearchVisibility()
-                } else {
-                    if (charSequence.length > MIN_CHARACTERS) {
-                        retrieveLocationWithDebounceTimeFrom(charSequence.toString())
-                    }
-                    clearSearchButton?.visibility = View.VISIBLE
-                    searchOption?.setIcon(R.drawable.leku_ic_search)
-                    searchOption?.isVisible = true
+            })
+        }
+
+    fun <T> ReceiveChannel<T>.debounce(time: Long)
+            : ReceiveChannel<T> = Channel<T>(capacity = Channel.CONFLATED).also { channel ->
+        GlobalScope.launch(Dispatchers.Main) {
+            var value = receive()
+            whileSelect {
+                onTimeout(time) {
+                    channel.offer(value)
+                    value = receive()
+                    true
+                }
+                onReceive {
+                    value = it
+                    true
                 }
             }
-
-            override fun afterTextChanged(editable: Editable) {
-            }
         }
+    }
+
+    private val textChangeAction: ((charSequence: CharSequence)->Unit) = { charSequence ->
+        if ("" == charSequence.toString()) {
+            if (isLegacyLayoutEnabled) {
+                adapter?.let {
+                    it.clear()
+                    it.notifyDataSetChanged()
+                }
+            } else {
+                searchAdapter?.let {
+                    it.notifyDataSetChanged()
+                }
+            }
+            showLocationInfoLayout()
+            clearSearchButton?.visibility = View.INVISIBLE
+            searchOption?.setIcon(R.drawable.leku_ic_mic_legacy)
+            updateVoiceSearchVisibility()
+        } else {
+            if (charSequence.length > MIN_CHARACTERS) {
+                retrieveLocationFrom(charSequence.toString())
+            }
+            clearSearchButton?.visibility = View.VISIBLE
+            searchOption?.setIcon(R.drawable.leku_ic_search)
+            searchOption?.isVisible = true
+        }
+    }
 
     private val defaultZoom: Int
         get() {
@@ -419,8 +447,12 @@ class LocationPickerActivity : AppCompatActivity(),
             }
             handled
         }
-        textWatcher = searchTextWatcher
-        searchView?.addTextChangedListener(textWatcher)
+        GlobalScope.launch(Dispatchers.Main) {
+            searchView?.onTextChanged()?.debounce(DEBOUNCE_TIME.toLong())?.consumeEach {
+                textChangeAction(it)
+            }
+        }
+
         if (!isLegacyLayoutEnabled) {
             searchView?.setOnFocusChangeListener { _: View?, hasFocus: Boolean ->
                 if (hasFocus) {
@@ -599,9 +631,9 @@ class LocationPickerActivity : AppCompatActivity(),
     }
 
     override fun onDestroy() {
-        textWatcher?.let {
+        /*textWatcher?.let {
             searchView?.removeTextChangedListener(it)
-        }
+        }*/
         huaweiApiClient?.removeConnectionSuccessListener(this)
         super.onDestroy()
     }
@@ -1102,18 +1134,6 @@ class LocationPickerActivity : AppCompatActivity(),
         }
     }
 
-    private fun retrieveLocationWithDebounceTimeFrom(query: String) {
-        if (searchZone != null && searchZone!!.isNotEmpty()) {
-            retrieveDebouncedLocationFromZone(query, searchZone!!, DEBOUNCE_TIME)
-        } else if (searchZoneRect != null) {
-            retrieveDebouncedLocationFromZone(query, searchZoneRect!!, DEBOUNCE_TIME)
-        } else if (isSearchZoneWithDefaultLocale) {
-            retrieveDebouncedLocationFromDefaultZone(query, DEBOUNCE_TIME)
-        } else {
-            geocoderPresenter?.getDebouncedFromLocationName(query, DEBOUNCE_TIME)
-        }
-    }
-
     private fun retrieveLocationFromDefaultZone(query: String) {
         geocoderPresenter?.let {
             if (DefaultCountryLocaleRect.defaultLowerLeft != null) {
@@ -1142,38 +1162,6 @@ class LocationPickerActivity : AppCompatActivity(),
                 query,
                 zoneRect.lowerLeft,
                 zoneRect.upperRight
-        )
-    }
-
-    private fun retrieveDebouncedLocationFromDefaultZone(query: String, debounceTime: Int) {
-        geocoderPresenter?.let {
-            if (DefaultCountryLocaleRect.defaultLowerLeft != null) {
-                it.getDebouncedFromLocationName(query, DefaultCountryLocaleRect.defaultLowerLeft!!,
-                        DefaultCountryLocaleRect.defaultUpperRight!!, debounceTime)
-            } else {
-                it.getDebouncedFromLocationName(query, debounceTime)
-            }
-        }
-    }
-
-    private fun retrieveDebouncedLocationFromZone(query: String, zoneKey: String, debounceTime: Int) {
-        geocoderPresenter?.let {
-            val locale = Locale(zoneKey)
-            if (DefaultCountryLocaleRect.getLowerLeftFromZone(locale) != null) {
-                it.getDebouncedFromLocationName(query, DefaultCountryLocaleRect.getLowerLeftFromZone(locale)!!,
-                        DefaultCountryLocaleRect.getUpperRightFromZone(locale)!!, debounceTime)
-            } else {
-                it.getDebouncedFromLocationName(query, debounceTime)
-            }
-        }
-    }
-
-    private fun retrieveDebouncedLocationFromZone(query: String, zoneRect: SearchZoneRect, debounceTime: Int) {
-        geocoderPresenter?.getDebouncedFromLocationName(
-                query,
-                zoneRect.lowerLeft,
-                zoneRect.upperRight,
-                debounceTime
         )
     }
 
