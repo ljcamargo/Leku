@@ -12,8 +12,8 @@ class GeocoderRepository(
     private val googleGeocoder: GeocoderInteractorDataSource
 ) {
 
-    suspend fun getFromLocationName(query: String): List<Address> = withContext(Dispatchers.IO) {
-        return@withContext try {
+    suspend fun getFromLocationName(query: String): List<Address> {
+        return try {
             androidGeocoder.getFromLocationName(query)
         } catch (exception: Exception) {
             googleGeocoder.getFromLocationName(query)
@@ -21,16 +21,16 @@ class GeocoderRepository(
     }
 
     suspend fun getFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng)
-            : List<Address> = withContext(Dispatchers.IO) {
-        return@withContext try {
+            : List<Address> {
+        return try {
             androidGeocoder.getFromLocationName(query, lowerLeft, upperRight)
         } catch (exception: Exception) {
             googleGeocoder.getFromLocationName(query, lowerLeft, upperRight)
         }
     }
 
-    suspend fun getFromLocation(latLng: LatLng): List<Address> = withContext(Dispatchers.IO) {
-        return@withContext try {
+    suspend fun getFromLocation(latLng: LatLng): List<Address> {
+        return try {
             androidGeocoder.getFromLocation(latLng.latitude, latLng.longitude)
         } catch (exception: Exception) {
             googleGeocoder.getFromLocation(latLng.latitude, latLng.longitude)

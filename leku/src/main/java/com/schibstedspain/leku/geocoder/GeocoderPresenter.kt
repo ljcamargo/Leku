@@ -1,6 +1,7 @@
 package com.schibstedspain.leku.geocoder
 
 import android.location.Address
+import android.util.Log
 import com.huawei.hms.maps.model.LatLng
 import com.huawei.hms.maps.model.LatLngBounds
 import com.schibstedspain.leku.geocoder.places.HuaweiSitesDataSource
@@ -10,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 private const val RETRY_COUNT = 3
@@ -42,7 +44,7 @@ class GeocoderPresenter @JvmOverloads constructor(
     fun getLastKnownLocation() {
         scope.launch(Dispatchers.Main) {
             try {
-                locationService.getLastKnownLocation(Dispatchers.IO)?.let {
+                locationService.getLastKnownLocation(Dispatchers.Main)?.let {
                     view?.showLastLocation(it)
                 }
             } catch (exception: java.lang.Exception) {
@@ -59,6 +61,7 @@ class GeocoderPresenter @JvmOverloads constructor(
                 val locations = geocoderRepository.getFromLocationName(query)
                 view?.showLocations(locations)
             } catch (exception: java.lang.Exception) {
+                exception.printStackTrace()
                 view?.showLoadLocationError()
             } finally {
                 view?.didLoadLocation()
@@ -75,6 +78,7 @@ class GeocoderPresenter @JvmOverloads constructor(
                 val allAddresses = sitesAddresses + geoCodeAddresses
                 view?.showLocations(allAddresses)
             } catch (exception: Exception) {
+                exception.printStackTrace()
                 view?.showLoadLocationError()
             } finally {
                 view?.didLoadLocation()

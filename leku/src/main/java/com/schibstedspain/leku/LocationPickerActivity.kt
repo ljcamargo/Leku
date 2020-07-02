@@ -59,6 +59,7 @@ import com.schibstedspain.leku.geocoder.AndroidGeocoderDataSource
 import com.schibstedspain.leku.geocoder.GeocoderPresenter
 import com.schibstedspain.leku.geocoder.GeocoderRepository
 import com.schibstedspain.leku.geocoder.GeocoderViewInterface
+import com.schibstedspain.leku.geocoder.HuaweiGeocoderDataSource
 import com.schibstedspain.leku.geocoder.places.HuaweiSitesDataSource
 import com.schibstedspain.leku.geocoder.timezone.HuaweiTimeZoneDataSource
 import com.schibstedspain.leku.locale.DefaultCountryLocaleRect
@@ -66,13 +67,13 @@ import com.schibstedspain.leku.locale.SearchZoneRect
 import com.schibstedspain.leku.permissions.PermissionUtils
 import com.schibstedspain.leku.tracker.TrackEvents
 import com.schibstedspain.leku.utils.BaseLocationService
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.whileSelect
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -171,7 +172,6 @@ class LocationPickerActivity : AppCompatActivity(),
     private var poisList: List<LekuPoi>? = null
     private var lekuPoisMarkersMap: MutableMap<String, LekuPoi>? = null
     private var currentMarker: Marker? = null
-    //private var textWatcher: TextWatcher? = null
     private var isVoiceSearchEnabled = true
     private var isUnnamedRoadVisible = true
     private var mapStyle: Int? = null
@@ -180,38 +180,33 @@ class LocationPickerActivity : AppCompatActivity(),
     private lateinit var toolbar: Toolbar
     private lateinit var timeZone: TimeZone
 
-    fun EditText.onTextChanged(): ReceiveChannel<String> =
-        Channel<String>(capacity = Channel.UNLIMITED).also { channel ->
-            addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(editable: Editable?) {
-                    editable?.toString().orEmpty().let(channel::offer)
-                }
-                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
-                override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { }
-
-            })
-        }
-
-    fun <T> ReceiveChannel<T>.debounce(time: Long)
-            : ReceiveChannel<T> = Channel<T>(capacity = Channel.CONFLATED).also { channel ->
-        GlobalScope.launch(Dispatchers.Main) {
-            var value = receive()
-            whileSelect {
-                onTimeout(time) {
-                    channel.offer(value)
-                    value = receive()
-                    true
-                }
-                onReceive {
-                    value = it
-                    true
+    fun EditText.afterTextChangedDebounce(delayMillis: Long, input: (String) -> Unit) {
+        var lastInput = ""
+        var debounceJob: Job? = null
+        val uiScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+        this.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(editable: Editable?) {
+                if (editable != null) {
+                    val newtInput = editable.toString()
+                    debounceJob?.cancel()
+                    if (lastInput != newtInput) {
+                        lastInput = newtInput
+                        debounceJob = uiScope.launch {
+                            delay(delayMillis)
+                            if (lastInput == newtInput) {
+                                input(newtInput)
+                            }
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    private val textChangeAction: ((charSequence: CharSequence)->Unit) = { charSequence ->
-        if ("" == charSequence.toString()) {
+            override fun beforeTextChanged(cs: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(cs: CharSequence?, start: Int, before: Int, count: Int) {}
+    })}
+
+    private val textChangeAction: ((string: String)->Unit) = { string ->
+        if (string.isBlank()) {
             if (isLegacyLayoutEnabled) {
                 adapter?.let {
                     it.clear()
@@ -227,8 +222,8 @@ class LocationPickerActivity : AppCompatActivity(),
             searchOption?.setIcon(R.drawable.leku_ic_mic_legacy)
             updateVoiceSearchVisibility()
         } else {
-            if (charSequence.length > MIN_CHARACTERS) {
-                retrieveLocationFrom(charSequence.toString())
+            if (string.length > MIN_CHARACTERS) {
+                retrieveLocationFrom(string)
             }
             clearSearchButton?.visibility = View.VISIBLE
             searchOption?.setIcon(R.drawable.leku_ic_search)
@@ -339,7 +334,11 @@ class LocationPickerActivity : AppCompatActivity(),
         }
         val geocoder = Geocoder(this, Locale.getDefault())
         val nativeGeocoder = AndroidGeocoderDataSource(geocoder)
-        val huaweiGeocoder = nativeGeocoder
+        val huaweiGeocoder = if (sitesDataSource != null) {
+            HuaweiGeocoderDataSource(sitesDataSource)
+        } else {
+            nativeGeocoder
+        }
         val geocoderRepository = GeocoderRepository(nativeGeocoder, huaweiGeocoder)
         geocoderPresenter = GeocoderPresenter(
                 locationService = BaseLocationService(applicationContext),
@@ -448,7 +447,7 @@ class LocationPickerActivity : AppCompatActivity(),
             handled
         }
         GlobalScope.launch(Dispatchers.Main) {
-            searchView?.onTextChanged()?.debounce(DEBOUNCE_TIME.toLong())?.consumeEach {
+            searchView?.afterTextChangedDebounce(DEBOUNCE_TIME.toLong()) {
                 textChangeAction(it)
             }
         }
@@ -1271,8 +1270,7 @@ class LocationPickerActivity : AppCompatActivity(),
     private fun setCurrentPositionLocation() {
         currentLocation?.let {
             setNewMapMarker(LatLng(it.latitude, it.longitude))
-            geocoderPresenter?.getInfoFromLocation(LatLng(it.latitude,
-                    it.longitude))
+            geocoderPresenter?.getInfoFromLocation(LatLng(it.latitude, it.longitude))
         }
     }
 
@@ -1317,9 +1315,9 @@ class LocationPickerActivity : AppCompatActivity(),
 
     @Synchronized
     private fun buildHuaweiApiClient() {
-        val huaweiApiClientBuilder = HuaweiApiClient.Builder(this).addConnectionCallbacks(this)
+        val huaweiApiClientBuilder = HuaweiApiClient.Builder(this)
+                .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
-                // .addApi(LocationServices.API)
 
         huaweiApiClient = huaweiApiClientBuilder.build()
         huaweiApiClient?.connect(this)

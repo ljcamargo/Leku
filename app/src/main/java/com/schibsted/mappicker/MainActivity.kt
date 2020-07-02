@@ -10,11 +10,21 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.schibstedspain.leku.* // ktlint-disable no-wildcard-imports
+import com.schibstedspain.leku.ADDRESS
+import com.schibstedspain.leku.LATITUDE
+import com.schibstedspain.leku.LEKU_POI
+import com.schibstedspain.leku.LOCATION_ADDRESS
+import com.schibstedspain.leku.LONGITUDE
+import com.schibstedspain.leku.LekuPoi
+import com.schibstedspain.leku.LocationPicker
+import com.schibstedspain.leku.LocationPickerActivity
+import com.schibstedspain.leku.TIME_ZONE_DISPLAY_NAME
+import com.schibstedspain.leku.TIME_ZONE_ID
+import com.schibstedspain.leku.TRANSITION_BUNDLE
+import com.schibstedspain.leku.ZIPCODE
 import com.schibstedspain.leku.tracker.LocationPickerTracker
 import com.schibstedspain.leku.tracker.TrackEvents
-import java.util.* // ktlint-disable no-wildcard-imports
-
+import java.util.*
 import kotlin.collections.ArrayList
 
 private const val MAP_BUTTON_REQUEST_CODE = 1
@@ -44,24 +54,22 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // StrictMode.setThreadPolicy(
-        //        StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build())
-        // StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().detectAll().penaltyLog().build())
         setContentView(R.layout.activity_main)
         val mapButton = findViewById<View>(R.id.map_button)
         mapButton.setOnClickListener {
             val locationPickerIntent = LocationPickerActivity.Builder()
-                    .withLocation(41.4036299, 2.1743558)
-                    .withHuaweiSitesApiKey(getString(R.string.api_key))
-                    // .withSearchZone("es_ES")
-                    // .withSearchZone(SearchZoneRect(LatLng(26.525467, -18.910366), LatLng(43.906271, 5.394197)))
-                    .withDefaultLocaleSearchZone()
+                    .withLocation(19.4326068, -99.1353936)
+                    //.withHuaweiSitesApiKey(getString(R.string.api_key))
+                    .withHuaweiSitesApiKey("CV8SI0ZE+1Oob/ZafxECqOtXozP2pioi2zv1i5SAvYAs2vTnGiaDTiTaJ2uM9K5opVZKDfjBwbtnd9vQkYrvRWnlkaZM")
+                    .withSearchZone("es_MX")
+                    //.withSearchZone(SearchZoneRect(LatLng(13.984783, -116.217472), LatLng(33.249174, -86.251964)))
+                    //.withDefaultLocaleSearchZone()
                     // .shouldReturnOkOnBackPressed()
                     // .withStreetHidden()
                     // .withCityHidden()
                     // .withZipCodeHidden()
                     // .withSatelliteViewHidden()
-                    .withGoogleTimeZoneEnabled()
+                    //.withGoogleTimeZoneEnabled()
                     // .withVoiceSearchHidden()
                     .withUnnamedRoadHidden()
                     .build(applicationContext)
@@ -110,18 +118,18 @@ class MainActivity : AppCompatActivity() {
             Log.d("RESULT****", "OK")
             if (requestCode == 1) {
                 val latitude = data.getDoubleExtra(LATITUDE, 0.0)
-                Log.d("LATITUDE****", latitude.toString())
+                Log.d("LATITUDE****", "$latitude")
                 val longitude = data.getDoubleExtra(LONGITUDE, 0.0)
-                Log.d("LONGITUDE****", longitude.toString())
+                Log.d("LONGITUDE****", "$longitude")
                 val address = data.getStringExtra(LOCATION_ADDRESS)
-                Log.d("ADDRESS****", address.toString())
+                Log.d("ADDRESS****", "$address")
                 val postalcode = data.getStringExtra(ZIPCODE)
-                Log.d("POSTALCODE****", postalcode.toString())
+                Log.d("POSTALCODE****", "$postalcode")
                 val bundle = data.getBundleExtra(TRANSITION_BUNDLE)
-                Log.d("BUNDLE TEXT****", bundle.getString("test"))
+                Log.d("BUNDLE TEXT****", "${bundle.getString("test")}")
                 val fullAddress = data.getParcelableExtra<Address>(ADDRESS)
                 if (fullAddress != null) {
-                    Log.d("FULL ADDRESS****", fullAddress.toString())
+                    Log.d("FULL ADDRESS****", "$fullAddress")
                 }
                 val timeZoneId = data.getStringExtra(TIME_ZONE_ID)
                 if (timeZoneId != null) {
@@ -133,13 +141,13 @@ class MainActivity : AppCompatActivity() {
                 }
             } else if (requestCode == 2) {
                 val latitude = data.getDoubleExtra(LATITUDE, 0.0)
-                Log.d("LATITUDE****", latitude.toString())
+                Log.d("LATITUDE****", "$latitude")
                 val longitude = data.getDoubleExtra(LONGITUDE, 0.0)
-                Log.d("LONGITUDE****", longitude.toString())
+                Log.d("LONGITUDE****", "$longitude")
                 val address = data.getStringExtra(LOCATION_ADDRESS)
-                Log.d("ADDRESS****", address.toString())
+                Log.d("ADDRESS****", "$address")
                 val lekuPoi = data.getParcelableExtra<LekuPoi>(LEKU_POI)
-                Log.d("LekuPoi****", lekuPoi.toString())
+                Log.d("LekuPoi****", "$lekuPoi")
             }
         }
         if (resultCode == Activity.RESULT_CANCELED) {
