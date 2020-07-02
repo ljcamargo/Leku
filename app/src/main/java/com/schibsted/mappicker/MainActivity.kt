@@ -59,8 +59,10 @@ class MainActivity : AppCompatActivity() {
         mapButton.setOnClickListener {
             val locationPickerIntent = LocationPickerActivity.Builder()
                     .withLocation(19.4326068, -99.1353936)
-                    //.withHuaweiSitesApiKey(getString(R.string.api_key))
                     .withHuaweiSitesApiKey("CV8SI0ZE+1Oob/ZafxECqOtXozP2pioi2zv1i5SAvYAs2vTnGiaDTiTaJ2uM9K5opVZKDfjBwbtnd9vQkYrvRWnlkaZM")
+                    //.withHuaweiSitesApiKey(getString(R.string.api_key))
+                    .withSearchCountry("MX")
+                    .withSearchLanguage("es")
                     .withSearchZone("es_MX")
                     //.withSearchZone(SearchZoneRect(LatLng(13.984783, -116.217472), LatLng(33.249174, -86.251964)))
                     //.withDefaultLocaleSearchZone()

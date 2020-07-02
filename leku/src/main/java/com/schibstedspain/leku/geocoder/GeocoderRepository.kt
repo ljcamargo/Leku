@@ -2,38 +2,35 @@ package com.schibstedspain.leku.geocoder
 
 import android.location.Address
 import com.huawei.hms.maps.model.LatLng
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
-private const val RETRY_COUNT = 3
 
 class GeocoderRepository(
-    private val androidGeocoder: GeocoderInteractorDataSource,
-    private val googleGeocoder: GeocoderInteractorDataSource
+        private val internalGeocoder: GeocoderInteractorDataSource,
+        private val providerGeocoder: GeocoderInteractorDataSource
 ) {
 
     suspend fun getFromLocationName(query: String): List<Address> {
         return try {
-            androidGeocoder.getFromLocationName(query)
+            internalGeocoder.getFromLocationName(query)
         } catch (exception: Exception) {
-            googleGeocoder.getFromLocationName(query)
+            providerGeocoder.getFromLocationName(query)
         }
     }
 
     suspend fun getFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng)
             : List<Address> {
         return try {
-            androidGeocoder.getFromLocationName(query, lowerLeft, upperRight)
+            internalGeocoder.getFromLocationName(query, lowerLeft, upperRight)
         } catch (exception: Exception) {
-            googleGeocoder.getFromLocationName(query, lowerLeft, upperRight)
+            providerGeocoder.getFromLocationName(query, lowerLeft, upperRight)
         }
     }
 
     suspend fun getFromLocation(latLng: LatLng): List<Address> {
         return try {
-            androidGeocoder.getFromLocation(latLng.latitude, latLng.longitude)
+            internalGeocoder.getFromLocation(latLng.latitude, latLng.longitude)
         } catch (exception: Exception) {
-            googleGeocoder.getFromLocation(latLng.latitude, latLng.longitude)
+            providerGeocoder.getFromLocation(latLng.latitude, latLng.longitude)
         }
     }
 }

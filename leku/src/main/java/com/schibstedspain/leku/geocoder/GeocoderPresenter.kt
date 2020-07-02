@@ -1,9 +1,7 @@
 package com.schibstedspain.leku.geocoder
 
 import android.location.Address
-import android.util.Log
 import com.huawei.hms.maps.model.LatLng
-import com.huawei.hms.maps.model.LatLngBounds
 import com.schibstedspain.leku.geocoder.places.HuaweiSitesDataSource
 import com.schibstedspain.leku.geocoder.timezone.HuaweiTimeZoneDataSource
 import com.schibstedspain.leku.utils.BaseLocationService
@@ -11,11 +9,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 
-private const val RETRY_COUNT = 3
-private const val MAX_PLACES_RESULTS = 3
+private const val MAX_PLACES_RESULTS = 8
 
 class GeocoderPresenter @JvmOverloads constructor(
     private val locationService: BaseLocationService,
@@ -27,7 +23,6 @@ class GeocoderPresenter @JvmOverloads constructor(
 
     private var view: GeocoderViewInterface? = null
     private val nullView = GeocoderViewInterface.NullView()
-    private var isHuaweiSitesEnabled = false
 
     init {
         this.view = nullView
@@ -54,12 +49,26 @@ class GeocoderPresenter @JvmOverloads constructor(
         }
     }
 
-    fun getFromLocationName(query: String) {
+    fun getFromLocationName(
+            query: String,
+            countryCode: String? = null,
+            language: String? = null,
+            types: String? = null
+    ) {
         view?.willLoadLocation()
         scope.launch(Dispatchers.Main) {
             try {
                 val locations = geocoderRepository.getFromLocationName(query)
-                view?.showLocations(locations)
+                val sites = getPlacesFromLocationName(
+                        query = query,
+                        lowerLeft = null,
+                        upperRight = null,
+                        countryCode = countryCode,
+                        language = language,
+                        types = types
+                )
+                val all = locations + sites
+                view?.showLocations(all)
             } catch (exception: java.lang.Exception) {
                 exception.printStackTrace()
                 view?.showLoadLocationError()
@@ -69,12 +78,23 @@ class GeocoderPresenter @JvmOverloads constructor(
         }
     }
 
-    fun getFromLocationName(query: String, lowerLeft: LatLng, upperRight: LatLng) {
+    fun getFromLocationName(
+            query: String,
+            lowerLeft: LatLng,
+            upperRight: LatLng,
+            countryCode: String? = null,
+            language: String? = null,
+            types: String? = null
+    ) {
         view?.willLoadLocation()
         scope.launch(Dispatchers.Main) {
             try {
-                val geoCodeAddresses = geocoderRepository.getFromLocationName(query, lowerLeft, upperRight)
-                val sitesAddresses = getPlacesFromLocationName(query, lowerLeft, upperRight)
+                val geoCodeAddresses = geocoderRepository.getFromLocationName(
+                        query, lowerLeft, upperRight
+                )
+                val sitesAddresses = getPlacesFromLocationName(
+                        query, lowerLeft, upperRight, countryCode, language, types
+                )
                 val allAddresses = sitesAddresses + geoCodeAddresses
                 view?.showLocations(allAddresses)
             } catch (exception: Exception) {
@@ -109,22 +129,25 @@ class GeocoderPresenter @JvmOverloads constructor(
         return address to timeZone
     }
 
-    fun enableGooglePlaces() {
-        this.isHuaweiSitesEnabled = true
-    }
-
     private suspend fun getPlacesFromLocationName(
         query: String,
-        lowerLeft: LatLng,
-        upperRight: LatLng
+        lowerLeft: LatLng?,
+        upperRight: LatLng?,
+        countryCode: String? = null,
+        language: String? = null,
+        types: String? = null
     ): List<Address> {
-        return if (isHuaweiSitesEnabled && huaweiSitesDataSource != null) {
-            huaweiSitesDataSource
-                    .getFromLocationName(query, LatLngBounds(lowerLeft, upperRight))
-                    .take(MAX_PLACES_RESULTS)
-                    .toList()
-        } else {
-            listOf()
-        }
+        return huaweiSitesDataSource
+                ?.getFromLocationName(
+                        query = query,
+                        southwest = lowerLeft,
+                        northeast = upperRight,
+                        countryCode = countryCode,
+                        language = language,
+                        types = types
+                )
+                ?.take(MAX_PLACES_RESULTS)
+                ?.toList()
+                ?: listOf()
     }
 }

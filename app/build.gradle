@@ -60,13 +60,6 @@ detekt {
   }
 }
 
-/*ktlint {
-  reporters {
-	reporter "plain"
-	reporter "checkstyle"
-  }
-}*/
-
 dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])
   implementation 'androidx.multidex:multidex:2.0.1'

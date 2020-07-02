@@ -1,6 +1,7 @@
 package com.schibstedspain.leku.geocoder.places
 
 import android.location.Address
+import com.huawei.hms.maps.model.LatLng
 import com.huawei.hms.maps.model.LatLngBounds
 import com.huawei.hms.site.api.SearchResultListener
 import com.huawei.hms.site.api.SearchService
@@ -15,7 +16,7 @@ import com.huawei.hms.site.api.model.QuerySuggestionRequest
 import com.huawei.hms.site.api.model.QuerySuggestionResponse
 import com.huawei.hms.site.api.model.SearchStatus
 import com.huawei.hms.site.api.model.Site
-import java.util.Locale
+import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -43,13 +44,40 @@ class HuaweiSitesDataSource(private val searchService: SearchService) {
         return getAddressListFromPrediction(result?.sites)
     }
 
-    suspend fun getFromLocationName(query: String, bounds: LatLngBounds): List<Address> {
-        val southwest = Coordinate(bounds.southwest.latitude, bounds.southwest.longitude)
-        val northeast = Coordinate(bounds.northeast.latitude, bounds.northeast.longitude)
-        val locationBias = CoordinateBounds(northeast, southwest)
+    suspend fun getFromLocationName(
+            query: String,
+            southwest: LatLng? = null,
+            northeast: LatLng? = null,
+            countryCode: String? = null,
+            language: String? = null,
+            types: String? = null
+    ): List<Address> {
         val result = onQuerySuggestion(QuerySuggestionRequest().also {
             it.query = query
-            it.bounds = locationBias
+            if (southwest != null && northeast != null) {
+                val sw = Coordinate(southwest.latitude, southwest.longitude)
+                val ne = Coordinate(northeast.latitude, northeast.longitude)
+                it.bounds = CoordinateBounds(ne, sw)
+            }
+            countryCode?.let { countryCode -> it.countryCode = countryCode }
+            language?.let { language -> it.language = language }
+            it.poiTypes = listOf(
+                    LocationType.ADDRESS,
+                    LocationType.ESTABLISHMENT,
+                    LocationType.REGIONS
+            )
+            types?.let { types ->
+                val poyTypes = types.split(", ").mapNotNull {
+                    when (it.toUpperCase()) {
+                        "GEOCODE" -> LocationType.GEOCODE
+                        "ADDRESS" -> LocationType.ADDRESS
+                        "ESTABLISHMENT" -> LocationType.ESTABLISHMENT
+                        "REGIONS" -> LocationType.REGIONS
+                        else -> null
+                    }
+                }
+                it.poiTypes = poyTypes
+            }
         })
         return getAddressListFromPrediction(result?.sites)
     }
@@ -73,7 +101,8 @@ class HuaweiSitesDataSource(private val searchService: SearchService) {
             address.latitude = it.lat
             address.longitude = it.lng
         }
-        val addressName = site.name.toString() + " - " + site.address.toString()
+        //val addressName = site.name.toString() + " - " + site.address.toString()
+        val addressName = "${site.name} - ${site.formatAddress}"
         address.setAddressLine(0, addressName)
         address.featureName = addressName
         return address

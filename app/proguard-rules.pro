@@ -16,8 +16,7 @@
 #   public *;
 #}
 
--keep class com.google.android.gms.** { *; }
--dontwarn com.google.android.gms.**
+-ignorewarnings
 -keepattributes *Annotation*
 -keepattributes Exceptions
 -keepattributes InnerClasses
