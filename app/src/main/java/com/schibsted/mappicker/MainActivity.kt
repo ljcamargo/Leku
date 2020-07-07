@@ -6,6 +6,7 @@ import android.content.Intent
 import android.location.Address
 import android.location.Location
 import android.os.Bundle
+import android.os.StrictMode
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -54,6 +55,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        /*StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build())
+        */StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().detectAll().penaltyLog().build())
         setContentView(R.layout.activity_main)
         val mapButton = findViewById<View>(R.id.map_button)
         mapButton.setOnClickListener {

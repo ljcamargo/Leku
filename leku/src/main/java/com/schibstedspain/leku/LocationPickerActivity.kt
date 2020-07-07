@@ -46,6 +46,7 @@ import com.huawei.hms.maps.CameraUpdateFactory
 import com.huawei.hms.maps.HuaweiMap
 import com.huawei.hms.maps.HuaweiMap.MAP_TYPE_NORMAL
 import com.huawei.hms.maps.HuaweiMap.MAP_TYPE_SATELLITE
+import com.huawei.hms.maps.MapsInitializer
 import com.huawei.hms.maps.OnMapReadyCallback
 import com.huawei.hms.maps.SupportMapFragment
 import com.huawei.hms.maps.model.BitmapDescriptorFactory
@@ -278,7 +279,6 @@ class LocationPickerActivity : AppCompatActivity(),
         setUpToolBar()
         checkLocationPermission()
         setUpSearchView()
-        setUpMapIfNeeded()
         setUpFloatingButtons()
         buildHuaweiApiClient()
         track(TrackEvents.ON_LOAD_LOCATION_PICKER)
@@ -298,25 +298,8 @@ class LocationPickerActivity : AppCompatActivity(),
             }
 
             setContentView(R.layout.leku_activity_location_picker)
-            moveGoogleLogoToTopRight()
         }
-    }
-
-    @SuppressLint("InlinedApi")
-    private fun moveGoogleLogoToTopRight() {
-        val contentView: View = findViewById(android.R.id.content)
-        val googleLogo: View? = contentView.findViewWithTag("GoogleWatermark")
-        googleLogo?.let {
-            val glLayoutParams: RelativeLayout.LayoutParams = it.layoutParams as RelativeLayout.LayoutParams
-            glLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 0)
-            glLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, 0)
-            glLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_START, 0)
-            glLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE)
-            glLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE)
-            val paddingTopInPixels = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24.0f, resources.displayMetrics).toInt()
-            it.setPadding(0, paddingTopInPixels, 0, 0)
-            it.layoutParams = glLayoutParams
-        }
+        (supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment).getMapAsync(this)
     }
 
     private fun checkLocationPermission() {
@@ -549,13 +532,6 @@ class LocationPickerActivity : AppCompatActivity(),
         updateVoiceSearchVisibility()
     }
 
-    private fun setUpMapIfNeeded() {
-        if (map == null) {
-            (supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment)
-                    .getMapAsync(this)
-        }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         if (isLegacyLayoutEnabled) {
             val inflater = menuInflater
@@ -628,7 +604,6 @@ class LocationPickerActivity : AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
-        setUpMapIfNeeded()
         switchToolbarVisibility()
     }
 
@@ -650,9 +625,9 @@ class LocationPickerActivity : AppCompatActivity(),
         }
     }
 
-    override fun onMapReady(googleMap: HuaweiMap) {
-        if (map == null) {
-            map = googleMap
+    override fun onMapReady(map: HuaweiMap) {
+        if (this.map == null) {
+            this.map = map
             setMapStyle()
             setDefaultMapSettings()
             setCurrentPositionLocation()
@@ -872,7 +847,6 @@ class LocationPickerActivity : AppCompatActivity(),
                 Toast.makeText(this, R.string.leku_no_geocoder_available, Toast.LENGTH_LONG).show()
                 return
             }
-            setUpMapIfNeeded()
         }
         setUpDefaultMapLocation()
     }
@@ -1269,10 +1243,10 @@ class LocationPickerActivity : AppCompatActivity(),
     }
 
     private fun setMapStyle() {
-        map?.let { googleMap ->
+        map?.let { map ->
             mapStyle?.let { style ->
                 val loadStyle = MapStyleOptions.loadRawResourceStyle(this, style)
-                googleMap.setMapStyle(loadStyle)
+                map.setMapStyle(loadStyle)
             }
         }
     }
@@ -1293,7 +1267,7 @@ class LocationPickerActivity : AppCompatActivity(),
             setCurrentPositionLocation()
         } else {
             searchView = findViewById(R.id.leku_search)
-            //retrieveLocationFrom(Locale.getDefault().displayCountry)
+            retrieveLocationFrom(Locale.getDefault().displayCountry)
             hasWiderZoom = true
         }
     }
@@ -1301,7 +1275,7 @@ class LocationPickerActivity : AppCompatActivity(),
     private fun setCurrentPositionLocation() {
         currentLocation?.let {
             setNewMapMarker(LatLng(it.latitude, it.longitude))
-            //geocoderPresenter?.getInfoFromLocation(LatLng(it.latitude, it.longitude))
+            geocoderPresenter?.getInfoFromLocation(LatLng(it.latitude, it.longitude))
         }
     }
 

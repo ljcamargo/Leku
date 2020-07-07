@@ -16,7 +16,7 @@
 #   public *;
 #}
 
--ignorewarnings
+
 -keepattributes *Annotation*
 -keepattributes Exceptions
 -keepattributes InnerClasses
